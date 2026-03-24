@@ -77,6 +77,9 @@ jobs:
       contents: read
       pages: read
 
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -95,7 +98,7 @@ jobs:
         uses: withastro/action@v6
         with:
           path: site
-          package-manager: pnpm
+          package-manager: pnpm@latest
         env:
           SITE: ${{ steps.pages.outputs.origin }}
           BASE_URL: ${{ steps.pages.outputs.base_path }}
@@ -112,6 +115,9 @@ jobs:
     permissions:
       pages: write       # deploy to Pages
       id-token: write    # OIDC token required by deploy-pages
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     environment:
       name: github-pages
