@@ -8,18 +8,14 @@ import WorkflowCard from '../components/WorkflowCard.astro';
 const base = import.meta.env.BASE_URL;
 const all = await getCollection('workflows');
 
-// Group by org
 const byOrg = all.reduce<Record<string, typeof all>>((acc, w) => {
   (acc[w.data.org] ??= []).push(w);
   return acc;
 }, {});
 
 const orgs = Object.keys(byOrg).sort();
-
-// Stats
 const totalRepos = new Set(all.map((w) => `${w.data.org}/${w.data.repo_name}`)).size;
 
-// Last updated (most recent fetch timestamp)
 const lastUpdated = all.reduce<Date | null>((max, w) => {
   const d = w.data.last_fetched;
   return !max || d > max ? d : max;
@@ -29,7 +25,6 @@ const lastUpdatedStr = lastUpdated
   ? lastUpdated.toLocaleDateString('en-US', { dateStyle: 'medium' })
   : 'unknown';
 
-// For searchable workflow cards
 const workflowCards = all.map((w) => ({
   ...w.data,
   detailHref: `${base}/${w.data.org}/${w.data.repo_name}/`,
@@ -42,21 +37,40 @@ const workflowCards = all.map((w) => ({
     ...w.data.jobs.flatMap((j) => j.actions_used.map((a) => a.uses)),
   ].join(' '),
 }));
+
+const stats = [
+  { label: 'Workflows', value: all.length, icon: 'workflow' },
+  { label: 'Repositories', value: totalRepos, icon: 'repo' },
+  { label: 'Organizations', value: orgs.length, icon: 'org' },
+];
 ---
 
 <BaseLayout title="Home">
   <!-- Hero -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">CI/CD Workflow Inventory</h1>
-    <p class="text-gray-600">
-      {all.length} workflows across {totalRepos} repositories in {orgs.length} organizations.
-      Last updated: {lastUpdatedStr}.
+  <div class="mb-10">
+    <h1 class="text-3xl font-bold text-slate-900 mb-3 tracking-tight">CI/CD Workflow Inventory</h1>
+    <p class="text-slate-600 max-w-2xl">
+      Centralized view of GitHub Actions workflows across Galaxy-ecosystem organizations.
+      Last updated <time class="font-medium text-slate-700">{lastUpdatedStr}</time>.
     </p>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-4 mt-6 max-w-xl">
+      {stats.map((s) => (
+        <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 text-center">
+          <div class="text-2xl font-bold text-blue-600">{s.value}</div>
+          <div class="text-xs text-slate-500 font-medium mt-0.5">{s.label}</div>
+        </div>
+      ))}
+    </div>
   </div>
 
   <!-- Org cards -->
   <section class="mb-10">
-    <h2 class="text-lg font-semibold text-gray-800 mb-4">Organizations</h2>
+    <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+      Organizations
+    </h2>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {orgs.map((org) => {
         const workflows = byOrg[org];
@@ -75,7 +89,10 @@ const workflowCards = all.map((w) => ({
 
   <!-- All workflows with search -->
   <section>
-    <h2 class="text-lg font-semibold text-gray-800 mb-4">All Workflows</h2>
+    <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+      All Workflows
+    </h2>
     <SearchFilter />
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {workflowCards.map((w) => (

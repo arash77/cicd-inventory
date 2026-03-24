@@ -19,7 +19,6 @@ interface Props {
   jobs: Job[];
   statusBadgeUrl: string;
   detailHref: string;
-  /** Text used for data-search-text filtering — pre-joined by caller */
   searchText: string;
 }
 
@@ -37,44 +36,51 @@ const {
 } = Astro.props;
 
 const triggerColors: Record<string, string> = {
-  push: 'bg-green-100 text-green-800',
-  pull_request: 'bg-blue-100 text-blue-800',
-  schedule: 'bg-yellow-100 text-yellow-800',
-  workflow_dispatch: 'bg-purple-100 text-purple-800',
-  release: 'bg-red-100 text-red-800',
+  push: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  pull_request: 'bg-blue-50 text-blue-700 border border-blue-200',
+  schedule: 'bg-amber-50 text-amber-700 border border-amber-200',
+  workflow_dispatch: 'bg-violet-50 text-violet-700 border border-violet-200',
+  release: 'bg-rose-50 text-rose-700 border border-rose-200',
 };
 
 const workflowGithubUrl = `${repoUrl}/actions/workflows/${workflowFile}`;
 ---
 
 <article
-  class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-3 hover:border-blue-300 hover:shadow-sm transition-all"
+  class="group bg-white rounded-xl border border-slate-200 p-5 flex flex-col gap-3 hover:border-blue-400 hover:shadow-md hover:shadow-blue-100/50 transition-all duration-200"
+  aria-label={`Workflow: ${workflowName} in ${org}/${repoName}`}
   data-search-text={searchText.toLowerCase()}
 >
   <div class="flex items-start justify-between gap-3">
     <div class="min-w-0">
-      <a href={detailHref} class="font-semibold text-gray-900 hover:text-blue-700 truncate block">
+      <a
+        href={detailHref}
+        class="font-semibold text-slate-900 hover:text-blue-600 truncate block cursor-pointer transition-colors duration-150"
+        title={workflowName}
+      >
         {workflowName}
       </a>
-      <a
-        href={repoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-xs text-gray-500 hover:text-blue-600"
-      >
-        {org}/{repoName}
-      </a>
-      <span class="text-xs text-gray-400 ml-2">{workflowFile}</span>
+      <div class="flex items-center gap-2 mt-0.5">
+        <a
+          href={repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs text-slate-500 hover:text-blue-600 cursor-pointer transition-colors duration-150"
+        >
+          {org}/{repoName}
+        </a>
+        <span class="text-xs text-slate-300">&middot;</span>
+        <span class="text-xs text-slate-400 font-mono">{workflowFile}</span>
+      </div>
     </div>
     <Badge src={statusBadgeUrl} alt={`${workflowName} status`} workflowUrl={workflowGithubUrl} />
   </div>
 
-  <!-- Triggers -->
   {onTriggers.length > 0 && (
     <div class="flex flex-wrap gap-1.5">
       {onTriggers.map((t) => (
         <span
-          class={`inline-block px-2 py-0.5 rounded text-xs font-medium ${triggerColors[t] ?? 'bg-gray-100 text-gray-700'}`}
+          class={`inline-block px-2 py-0.5 rounded-md text-xs font-medium ${triggerColors[t] ?? 'bg-slate-50 text-slate-600 border border-slate-200'}`}
         >
           {t}
         </span>
@@ -82,11 +88,11 @@ const workflowGithubUrl = `${repoUrl}/actions/workflows/${workflowFile}`;
     </div>
   )}
 
-  <!-- Jobs summary -->
-  <div class="text-xs text-gray-500">
+  <div class="text-xs text-slate-500 flex items-center gap-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
     {jobs.length} job{jobs.length !== 1 ? 's' : ''}
     {jobs.length > 0 && (
-      <span class="ml-2 text-gray-400">
+      <span class="text-slate-400">
         ({jobs.map((j) => j.name ?? j.job_id).join(', ')})
       </span>
     )}

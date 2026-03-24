@@ -1,12 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import Badge from '../../components/Badge.astro';
 
 export async function getStaticPaths() {
   const all = await getCollection('workflows');
 
-  // Group by org/repo
   const grouped = all.reduce<Record<string, typeof all>>((acc, w) => {
     const key = `${w.data.org}/${w.data.repo_name}`;
     (acc[key] ??= []).push(w);
@@ -29,11 +29,11 @@ const base = import.meta.env.BASE_URL;
 const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo}`;
 
 const triggerColors: Record<string, string> = {
-  push: 'bg-green-100 text-green-800',
-  pull_request: 'bg-blue-100 text-blue-800',
-  schedule: 'bg-yellow-100 text-yellow-800',
-  workflow_dispatch: 'bg-purple-100 text-purple-800',
-  release: 'bg-red-100 text-red-800',
+  push: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  pull_request: 'bg-blue-50 text-blue-700 border border-blue-200',
+  schedule: 'bg-amber-50 text-amber-700 border border-amber-200',
+  workflow_dispatch: 'bg-violet-50 text-violet-700 border border-violet-200',
+  release: 'bg-rose-50 text-rose-700 border border-rose-200',
 };
 ---
 
@@ -41,28 +41,26 @@ const triggerColors: Record<string, string> = {
   title={`${org}/${repo}`}
   description={`GitHub Actions workflows for ${org}/${repo}`}
 >
-  <!-- Breadcrumb -->
-  <nav class="text-sm text-gray-500 mb-6">
-    <a href={`${base}/`} class="hover:text-blue-600">Home</a>
-    <span class="mx-1">/</span>
-    <a href={`${base}/${org}/`} class="hover:text-blue-600">{org}</a>
-    <span class="mx-1">/</span>
-    <span class="text-gray-800 font-medium">{repo}</span>
-  </nav>
+  <Breadcrumb items={[
+    { label: 'Home', href: `${base}/` },
+    { label: org, href: `${base}/${org}/` },
+    { label: repo },
+  ]} />
 
   <!-- Repo header -->
   <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">
+    <h1 class="text-2xl font-bold text-slate-900 mb-1 tracking-tight">
       <a
         href={repoUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="hover:text-blue-700"
+        class="hover:text-blue-600 cursor-pointer transition-colors duration-150 inline-flex items-center gap-2"
       >
         {org}/{repo}
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
       </a>
     </h1>
-    <p class="text-gray-500 text-sm">
+    <p class="text-slate-500 text-sm">
       {workflows.length} workflow{workflows.length !== 1 ? 's' : ''}
     </p>
   </div>
@@ -71,17 +69,18 @@ const triggerColors: Record<string, string> = {
   <div class="flex flex-col gap-8">
     {workflows.map((w) => {
       const workflowGithubUrl = `${repoUrl}/actions/workflows/${w.data.workflow_file}`;
+      const yamlId = `yaml-${w.data.workflow_file.replace(/[^a-zA-Z0-9]/g, '-')}`;
       return (
-        <section class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm" aria-label={`Workflow: ${w.data.workflow_name}`}>
           <!-- Workflow header -->
-          <div class="flex items-start justify-between gap-4 p-6 border-b border-gray-100">
+          <div class="flex items-start justify-between gap-4 p-6 border-b border-slate-100 bg-slate-50/50">
             <div>
-              <h2 class="text-lg font-semibold text-gray-900">{w.data.workflow_name}</h2>
+              <h2 class="text-lg font-semibold text-slate-900">{w.data.workflow_name}</h2>
               <a
                 href={`${repoUrl}/blob/HEAD/${w.data.workflow_path}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-xs text-blue-600 hover:underline font-mono"
+                class="text-xs text-blue-600 hover:underline cursor-pointer transition-colors duration-150 font-mono"
               >
                 {w.data.workflow_path}
               </a>
@@ -97,11 +96,11 @@ const triggerColors: Record<string, string> = {
             <!-- Triggers -->
             {w.data.on_triggers.length > 0 && (
               <div>
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Triggers</h3>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Triggers</h3>
                 <div class="flex flex-wrap gap-2">
                   {w.data.on_triggers.map((t) => (
                     <span
-                      class={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${triggerColors[t] ?? 'bg-gray-100 text-gray-700'}`}
+                      class={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${triggerColors[t] ?? 'bg-slate-50 text-slate-600 border border-slate-200'}`}
                     >
                       {t}
                     </span>
@@ -113,15 +112,16 @@ const triggerColors: Record<string, string> = {
             <!-- Jobs table -->
             {w.data.jobs.length > 0 && (
               <div>
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Jobs</h3>
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
-                  <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 border-b border-gray-200">
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Jobs</h3>
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="data-table min-w-full text-sm">
+                    <caption class="sr-only">Jobs for {w.data.workflow_name}</caption>
+                    <thead class="bg-slate-50 border-b border-slate-200">
                       <tr>
-                        <th class="text-left px-3 py-2 font-medium text-gray-600">Job</th>
-                        <th class="text-left px-3 py-2 font-medium text-gray-600">Runs on</th>
-                        <th class="text-right px-3 py-2 font-medium text-gray-600">Steps</th>
-                        <th class="text-left px-3 py-2 font-medium text-gray-600">Actions used</th>
+                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600">Job</th>
+                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600">Runs on</th>
+                        <th scope="col" class="text-right px-3 py-2.5 font-medium text-slate-600">Steps</th>
+                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600">Actions used</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -130,16 +130,16 @@ const triggerColors: Record<string, string> = {
                           ? job.runs_on.join(', ')
                           : job.runs_on;
                         return (
-                          <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td class="px-3 py-2 font-medium text-gray-800">
+                          <tr class={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                            <td class="px-3 py-2.5 font-medium text-slate-800">
                               {job.name ?? job.job_id}
                             </td>
-                            <td class="px-3 py-2 font-mono text-xs text-gray-600">{runsOn}</td>
-                            <td class="px-3 py-2 text-right text-gray-500">{job.steps_count}</td>
-                            <td class="px-3 py-2">
+                            <td class="px-3 py-2.5 text-xs text-slate-600 font-mono">{runsOn}</td>
+                            <td class="px-3 py-2.5 text-right text-slate-500 tabular-nums">{job.steps_count}</td>
+                            <td class="px-3 py-2.5">
                               <div class="flex flex-wrap gap-1">
                                 {job.actions_used.map((a) => (
-                                  <span class="inline-block bg-indigo-50 text-indigo-700 rounded px-1.5 py-0.5 text-xs font-mono">
+                                  <span class="inline-block bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-1.5 py-0.5 text-xs font-mono">
                                     {a.uses}
                                   </span>
                                 ))}
@@ -156,21 +156,62 @@ const triggerColors: Record<string, string> = {
 
             <!-- Raw YAML -->
             <div>
-              <details>
-                <summary class="text-xs font-semibold uppercase tracking-wide text-gray-500 cursor-pointer select-none hover:text-gray-800 mb-2">
+              <details aria-label={`Raw YAML for ${w.data.workflow_name}`}>
+                <summary class="text-xs font-semibold uppercase tracking-wide text-slate-500 cursor-pointer select-none hover:text-slate-800 transition-colors duration-150 mb-2">
                   Raw YAML
                 </summary>
-                <pre class="yaml-block mt-2"><code>{w.data.raw_yaml}</code></pre>
+                <div class="relative mt-2">
+                  <pre class="yaml-block" id={yamlId}><code>{w.data.raw_yaml}</code></pre>
+                  <button
+                    class="yaml-copy-btn"
+                    data-copy-target={yamlId}
+                    aria-label={`Copy YAML for ${w.data.workflow_name}`}
+                    type="button"
+                  >
+                    Copy
+                  </button>
+                </div>
               </details>
             </div>
 
             <!-- Meta -->
-            <p class="text-xs text-gray-400">
-              Last fetched: {w.data.last_fetched.toLocaleDateString('en-US', { dateStyle: 'medium' })}
+            <p class="text-xs text-slate-400">
+              Last fetched: <time>{w.data.last_fetched.toLocaleDateString('en-US', { dateStyle: 'medium' })}</time>
             </p>
           </div>
         </section>
       );
     })}
   </div>
+
+  <script>
+    document.querySelectorAll('.yaml-copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const targetId = (btn as HTMLElement).dataset.copyTarget;
+        if (!targetId) return;
+        const pre = document.getElementById(targetId);
+        if (!pre) return;
+        const text = pre.textContent ?? '';
+        try {
+          await navigator.clipboard.writeText(text);
+          const original = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = original; }, 2000);
+        } catch {
+          // Fallback for older browsers
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          const original = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = original; }, 2000);
+        }
+      });
+    });
+  </script>
 </BaseLayout>

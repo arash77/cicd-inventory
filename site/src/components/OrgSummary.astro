@@ -12,24 +12,25 @@ const avatarUrl = `https://github.com/${org}.png?size=80`;
 
 <a
   href={href}
-  class="flex items-center gap-4 bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
+  aria-label={`View ${org} organization – ${repoCount} repos, ${workflowCount} workflows`}
+  class="group flex items-center gap-4 bg-white rounded-xl border border-slate-200 p-5 cursor-pointer hover:border-blue-400 hover:shadow-md hover:shadow-blue-100/50 transition-all duration-200"
 >
   <img
     src={avatarUrl}
     alt={`${org} avatar`}
     width="48"
     height="48"
-    class="rounded-full border border-gray-200"
+    class="rounded-full border border-slate-200 group-hover:border-blue-300 transition-colors duration-200"
     loading="lazy"
   />
   <div class="min-w-0">
-    <p class="font-semibold text-gray-900 truncate">{org}</p>
-    <p class="text-sm text-gray-500">
+    <p class="font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors duration-150">{org}</p>
+    <p class="text-sm text-slate-500">
       {repoCount} repo{repoCount !== 1 ? 's' : ''} &middot; {workflowCount} workflow{workflowCount !== 1 ? 's' : ''}
     </p>
   </div>
   <svg
-    class="ml-auto text-gray-400 shrink-0"
+    class="ml-auto text-slate-300 shrink-0 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all duration-200"
     xmlns="http://www.w3.org/2000/svg"
     width="16"
     height="16"
@@ -39,6 +40,7 @@ const avatarUrl = `https://github.com/${org}.png?size=80`;
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"
+    aria-hidden="true"
   >
     <polyline points="9 18 15 12 9 6" />
   </svg>

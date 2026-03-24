@@ -9,7 +9,14 @@ const { src, alt = 'Build status', workflowUrl } = Astro.props;
 ---
 
 {workflowUrl ? (
-  <a href={workflowUrl} target="_blank" rel="noopener noreferrer" title={alt}>
+  <a
+    href={workflowUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={`${alt} – opens in new tab`}
+    title={alt}
+    class="inline-flex cursor-pointer rounded transition-opacity duration-150 hover:opacity-80"
+  >
     <img src={src} alt={alt} loading="lazy" class="h-5 inline-block" />
   </a>
 ) : (
