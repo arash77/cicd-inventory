@@ -73,7 +73,9 @@ const workflowGithubUrl = `${repoUrl}/actions/workflows/${workflowFile}`;
         <span class="text-xs text-slate-400 font-mono">{workflowFile}</span>
       </div>
     </div>
-    <Badge src={statusBadgeUrl} alt={`${workflowName} status`} workflowUrl={workflowGithubUrl} />
+    <div class="shrink-0 self-start pt-0.5">
+      <Badge src={statusBadgeUrl} alt={`${workflowName} status`} workflowUrl={workflowGithubUrl} />
+    </div>
   </div>
 
   {onTriggers.length > 0 && (

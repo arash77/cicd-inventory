@@ -4,9 +4,10 @@ interface Props {
   repoCount: number;
   workflowCount: number;
   href: string;
+  searchText?: string;
 }
 
-const { org, repoCount, workflowCount, href } = Astro.props;
+const { org, repoCount, workflowCount, href, searchText } = Astro.props;
 const avatarUrl = `https://github.com/${org}.png?size=80`;
 ---
 
@@ -14,6 +15,7 @@ const avatarUrl = `https://github.com/${org}.png?size=80`;
   href={href}
   aria-label={`View ${org} organization – ${repoCount} repos, ${workflowCount} workflows`}
   class="group flex items-center gap-4 bg-white rounded-xl border border-slate-200 p-5 cursor-pointer hover:border-blue-400 hover:shadow-md hover:shadow-blue-100/50 transition-all duration-200"
+  data-search-text={searchText?.toLowerCase() ?? org.toLowerCase()}
 >
   <img
     src={avatarUrl}

@@ -85,11 +85,13 @@ const triggerColors: Record<string, string> = {
                 {w.data.workflow_path}
               </a>
             </div>
-            <Badge
-              src={w.data.status_badge_url}
-              alt={`${w.data.workflow_name} status`}
-              workflowUrl={workflowGithubUrl}
-            />
+            <div class="shrink-0 self-start pt-0.5">
+              <Badge
+                src={w.data.status_badge_url}
+                alt={`${w.data.workflow_name} status`}
+                workflowUrl={workflowGithubUrl}
+              />
+            </div>
           </div>
 
           <div class="p-6 flex flex-col gap-6">
