@@ -29,10 +29,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           enable-cache: true
@@ -56,7 +56,7 @@ jobs:
             --output-dir "../site/src/content/workflows"
 
       - name: Upload workflow data artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: workflow-data
           path: site/src/content/workflows/
@@ -77,10 +77,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download workflow data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: workflow-data
           path: site/src/content/workflows/
