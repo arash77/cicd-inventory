@@ -100,8 +100,8 @@ jobs:
           path: site
           package-manager: pnpm@latest
         env:
-          SITE: ${{ steps.pages.outputs.origin }}
-          BASE_URL: ${{ steps.pages.outputs.base_path }}
+          ASTRO_SITE: ${{ steps.pages.outputs.origin }}
+          ASTRO_BASE: ${{ steps.pages.outputs.base_path }}
 
   # -----------------------------------------------------------------------
   # Job 3: Deploy the Pages artifact

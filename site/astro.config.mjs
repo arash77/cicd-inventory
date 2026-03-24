@@ -3,8 +3,8 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: process.env.SITE,
-  base: process.env.BASE_URL,
+  site: process.env.ASTRO_SITE,
+  base: process.env.ASTRO_BASE,
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],
