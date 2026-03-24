@@ -15,7 +15,7 @@ const jobSchema = z.object({
 });
 
 const workflows = defineCollection({
-  loader: glob({ pattern: '**/*.json', base: './src/content/workflows' }),
+  loader: glob({ pattern: ['**/*.json', '!**/_index.json'], base: './src/content/workflows' }),
   schema: z.object({
     id: z.string(),
     org: z.string(),
