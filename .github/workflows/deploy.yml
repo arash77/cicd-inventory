@@ -1,0 +1,130 @@
+name: Build and Deploy CI/CD Inventory
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Daily at 06:00 UTC
+  workflow_dispatch:        # Allow manual trigger
+
+# Defense-in-depth: deny all permissions at workflow level.
+# Each job declares only what it actually needs.
+permissions: {}
+
+# GitHub Pages requires the "pages" concurrency group to serialize deployments.
+# Never cancel in-flight runs — a partial deployment would leave the site broken.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Job 1: Run the Python extractor to fetch workflow data from GitHub
+  # -----------------------------------------------------------------------
+  extract:
+    name: Extract workflow data
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: read   # checkout only
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "extractor/pyproject.toml"
+
+      - name: Install extractor dependencies
+        working-directory: extractor
+        run: uv sync --frozen
+
+      - name: Run extractor
+        working-directory: extractor
+        env:
+          # Use a dedicated PAT — GITHUB_TOKEN cannot read cross-org data.
+          # Required scopes: read:org, public_repo
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          # Pass org list via env to avoid script-injection via run: interpolation.
+          ORGS: "BioContainers,galaxyproject,usegalaxy-eu"
+        run: |
+          uv run cicd-inventory \
+            --orgs "$ORGS" \
+            --output-dir "../site/src/content/workflows"
+
+      - name: Upload workflow data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-data
+          path: site/src/content/workflows/
+          retention-days: 1
+
+  # -----------------------------------------------------------------------
+  # Job 2: Build the Astro site and upload the Pages artifact
+  # -----------------------------------------------------------------------
+  build:
+    name: Build Astro site
+    runs-on: ubuntu-latest
+    needs: extract
+    timeout-minutes: 20
+
+    permissions:
+      contents: read   # checkout only
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download workflow data
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-data
+          path: site/src/content/workflows/
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install site dependencies
+        working-directory: site
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        working-directory: site
+        run: pnpm build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist/
+
+  # -----------------------------------------------------------------------
+  # Job 3: Deploy the Pages artifact
+  # -----------------------------------------------------------------------
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+
+    permissions:
+      pages: write       # deploy to Pages
+      id-token: write    # OIDC token required by deploy-pages
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

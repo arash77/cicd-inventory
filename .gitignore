@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+
+# uv
+extractor/.python-version
+
+# Node / Astro
+site/node_modules/
+site/dist/
+site/.astro/
+
+# Generated content (populated by the extractor at build time)
+site/src/content/workflows/
+
+# Environment
+.env
+.env.local
+*.env
+
+# OS
+.DS_Store
+Thumbs.db

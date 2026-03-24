@@ -1,0 +1,23 @@
+<objective>
+Architect a scalable, automated pipeline that fetches, parses, and documents GitHub Actions CI/CD workflows from multiple GitHub organizations (BioContainers, galaxyproject, usegalaxy-eu) into a centralized, searchable documentation site.
+</objective>
+
+<tech_stack>
+- Python 3.14+ (managed strictly via `uv`)
+- Astro 6 (using Content Collections for routing)
+- GitHub Actions (for the meta-CI pipeline)
+</tech_stack>
+
+<requirements>
+Output a step-by-step technical plan addressing the following:
+
+1. Python Architecture: Design the extractor using a modern `pyproject.toml` structure managed by `uv`. Architect it using an adapter pattern so the core logic is decoupled from GitHub's specific API responses.
+2. Data Schema: Define a standardized JSON/YAML schema to map GitHub Actions workflows into a uniform format (e.g., Repo Name, Workflow Name, `on` triggers, `jobs` list, Status Badge).
+3. API Strategy: Outline how the script will use the GitHub GraphQL API to find repositories and extract `.github/workflows/*.yml` files efficiently. Detail rate limit and pagination handling.
+4. Static Site Generation: Detail how to use Astro 6's Content Collections to ingest the Python-generated JSON/YAML files and dynamically route them into static pages.
+5. Automation: Design a GitHub Actions workflow for this repository that runs on a cron schedule. It must use `astral-sh/setup-uv` to execute the Python extractor, run the Astro build process, and deploy the output to GitHub Pages.
+</requirements>
+
+<output_format>
+Provide the plan broken down by phases. Identify potential bottlenecks and propose exact technical solutions. Include a Mermaid.js diagram illustrating the data flow from the target organizations to the final GitHub Pages deployment. Do not write the final implementation code yet.
+</output_format>

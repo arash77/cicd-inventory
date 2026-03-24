@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'CI/CD workflow inventory for Galaxy-ecosystem GitHub organizations.' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title} — CI/CD Inventory</title>
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+  </head>
+  <body class="min-h-full bg-gray-50 text-gray-900 flex flex-col">
+    <!-- Nav -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-6">
+        <a href={base} class="font-bold text-blue-700 text-lg tracking-tight hover:text-blue-900">
+          CI/CD Inventory
+        </a>
+        <nav class="flex gap-4 text-sm text-gray-600">
+          <a href={`${base}BioContainers/`} class="hover:text-blue-700">BioContainers</a>
+          <a href={`${base}galaxyproject/`} class="hover:text-blue-700">galaxyproject</a>
+          <a href={`${base}usegalaxy-eu/`} class="hover:text-blue-700">usegalaxy-eu</a>
+        </nav>
+        <span class="ml-auto text-xs text-gray-400">Auto-updated daily</span>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 bg-white mt-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-gray-500 flex justify-between items-center">
+        <span>Galaxy CI/CD Inventory</span>
+        <a
+          href="https://github.com/galaxyproject/cicd-inventory"
+          class="hover:text-blue-700"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View source
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>

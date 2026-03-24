@@ -1,0 +1,276 @@
+"""GitHub provider — fetches workflow files via the GitHub GraphQL API."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from datetime import UTC, datetime
+from typing import Any
+
+import httpx
+import yaml
+
+from cicd_inventory.models import ActionReference, JobInfo, WorkflowRecord
+from cicd_inventory.providers.base import RepositoryProvider
+from cicd_inventory.queries import REPO_DISCOVERY_QUERY, RepoRef, build_workflow_batch_query
+
+log = logging.getLogger(__name__)
+
+_GRAPHQL_URL = "https://api.github.com/graphql"
+_BATCH_SIZE = 20          # repos per aliased batch query
+_RATE_LIMIT_BUFFER = 200  # sleep when remaining points drop below this
+
+
+class GitHubProvider(RepositoryProvider):
+    """Concrete provider that fetches workflows from GitHub via GraphQL."""
+
+    def __init__(self, token: str) -> None:
+        self._headers = {
+            "Authorization": f"bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/vnd.github+json",
+        }
+
+    # ------------------------------------------------------------------
+    # Public interface
+    # ------------------------------------------------------------------
+
+    async def fetch_workflows(self, orgs: list[str]) -> list[WorkflowRecord]:
+        async with httpx.AsyncClient(headers=self._headers, timeout=60) as client:
+            self._client = client
+            records: list[WorkflowRecord] = []
+            for org in orgs:
+                log.info("Discovering repos in %s …", org)
+                repos = await self._discover_repos(org)
+                log.info("Found %d repos in %s, fetching workflows …", len(repos), org)
+                org_records = await self._fetch_all_workflows(repos)
+                records.extend(org_records)
+                log.info("Collected %d workflow records from %s", len(org_records), org)
+            return records
+
+    # ------------------------------------------------------------------
+    # Repo discovery (paginated)
+    # ------------------------------------------------------------------
+
+    async def _discover_repos(self, org: str) -> list[RepoRef]:
+        repos: list[RepoRef] = []
+        cursor: str | None = None
+
+        while True:
+            data = await self._graphql(
+                REPO_DISCOVERY_QUERY,
+                variables={"org": org, "cursor": cursor},
+            )
+            await self._check_rate_limit(data)
+
+            org_data = data.get("organization")
+            if not org_data:
+                log.warning("No organization data returned for %s", org)
+                break
+
+            repo_conn = org_data["repositories"]
+            for node in repo_conn["nodes"]:
+                if node["isArchived"]:
+                    continue
+                if node["defaultBranchRef"] is None:
+                    continue  # empty repo
+                repos.append(RepoRef(owner=org, name=node["name"]))
+
+            page_info = repo_conn["pageInfo"]
+            if not page_info["hasNextPage"]:
+                break
+            cursor = page_info["endCursor"]
+
+        return repos
+
+    # ------------------------------------------------------------------
+    # Workflow fetching (batched alias queries)
+    # ------------------------------------------------------------------
+
+    async def _fetch_all_workflows(self, repos: list[RepoRef]) -> list[WorkflowRecord]:
+        records: list[WorkflowRecord] = []
+        for i in range(0, len(repos), _BATCH_SIZE):
+            batch = repos[i : i + _BATCH_SIZE]
+            batch_records = await self._fetch_workflow_batch(batch)
+            records.extend(batch_records)
+        return records
+
+    async def _fetch_workflow_batch(self, repos: list[RepoRef]) -> list[WorkflowRecord]:
+        query = build_workflow_batch_query(repos)
+        data = await self._graphql(query)
+        await self._check_rate_limit(data)
+
+        records: list[WorkflowRecord] = []
+        for i, repo in enumerate(repos):
+            alias = f"repo_{i}"
+            repo_data = data.get(alias)
+            if not repo_data:
+                continue
+
+            tree = repo_data.get("object")
+            if not tree:
+                continue  # no .github/workflows directory
+
+            entries = tree.get("entries", [])
+            for entry in entries:
+                filename: str = entry["name"]
+                if not (filename.endswith(".yml") or filename.endswith(".yaml")):
+                    continue
+                if entry["type"] != "blob":
+                    continue
+
+                blob = entry.get("object")
+                if not blob or not blob.get("text"):
+                    continue
+
+                raw_text: str = blob["text"]
+                record = self._parse_workflow_yaml(raw_text, repo.owner, repo.name, filename)
+                if record:
+                    records.append(record)
+
+        return records
+
+    # ------------------------------------------------------------------
+    # YAML → WorkflowRecord
+    # ------------------------------------------------------------------
+
+    def _parse_workflow_yaml(
+        self,
+        text: str,
+        org: str,
+        repo: str,
+        filename: str,
+    ) -> WorkflowRecord | None:
+        try:
+            doc: dict[str, Any] = yaml.safe_load(text) or {}
+        except yaml.YAMLError as exc:
+            log.warning("YAML parse error in %s/%s/%s: %s", org, repo, filename, exc)
+            return None
+
+        workflow_name: str = doc.get("name") or filename
+        on_triggers: list[str] = _extract_triggers(doc.get("on", {}))
+        jobs: list[JobInfo] = _extract_jobs(doc.get("jobs", {}))
+
+        repo_url = f"https://github.com/{org}/{repo}"
+        return WorkflowRecord(
+            id=f"{org}/{repo}/{filename}",
+            org=org,
+            repo_name=repo,
+            repo_url=repo_url,
+            workflow_file=filename,
+            workflow_path=f".github/workflows/{filename}",
+            workflow_name=workflow_name,
+            on_triggers=on_triggers,
+            jobs=jobs,
+            status_badge_url=f"{repo_url}/actions/workflows/{filename}/badge.svg",
+            last_fetched=datetime.now(UTC),
+            raw_yaml=text,
+        )
+
+    # ------------------------------------------------------------------
+    # Rate limiting
+    # ------------------------------------------------------------------
+
+    async def _check_rate_limit(self, data: dict[str, Any]) -> None:
+        rate = data.get("rateLimit")
+        if not rate:
+            return
+        remaining: int = rate.get("remaining", 9999)
+        log.debug("GitHub rate limit: %d remaining", remaining)
+        if remaining < _RATE_LIMIT_BUFFER:
+            reset_at_str: str = rate["resetAt"]
+            reset_at = datetime.fromisoformat(reset_at_str.replace("Z", "+00:00"))
+            sleep_secs = max(0, (reset_at - datetime.now(UTC)).total_seconds()) + 5
+            log.warning(
+                "Rate limit low (%d remaining). Sleeping %.0fs until %s …",
+                remaining,
+                sleep_secs,
+                reset_at_str,
+            )
+            await asyncio.sleep(sleep_secs)
+
+    # ------------------------------------------------------------------
+    # HTTP helper with retry
+    # ------------------------------------------------------------------
+
+    async def _graphql(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"query": query}
+        if variables:
+            payload["variables"] = variables
+
+        for attempt in range(3):
+            try:
+                resp = await self._client.post(_GRAPHQL_URL, json=payload)
+            except httpx.TransportError as exc:
+                if attempt == 2:
+                    raise
+                wait = 2**attempt
+                log.warning("Transport error (attempt %d/3): %s — retrying in %ds", attempt + 1, exc, wait)
+                await asyncio.sleep(wait)
+                continue
+
+            if resp.status_code in (429, 502, 503):
+                if attempt == 2:
+                    resp.raise_for_status()
+                wait = 2**attempt
+                log.warning("HTTP %d (attempt %d/3) — retrying in %ds", resp.status_code, attempt + 1, wait)
+                await asyncio.sleep(wait)
+                continue
+
+            resp.raise_for_status()
+            body: dict[str, Any] = resp.json()
+
+            if errors := body.get("errors"):
+                # GraphQL partial errors — log but don't abort; data may still be present
+                for err in errors:
+                    log.warning("GraphQL error: %s", err.get("message", err))
+
+            return body.get("data", {})
+
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# YAML parsing helpers
+# ---------------------------------------------------------------------------
+
+def _extract_triggers(on_field: Any) -> list[str]:
+    """Normalise the ``on:`` key into a flat list of event names."""
+    if on_field is None:
+        return []
+    if isinstance(on_field, str):
+        return [on_field]
+    if isinstance(on_field, list):
+        return [str(t) for t in on_field]
+    if isinstance(on_field, dict):
+        return list(on_field.keys())
+    return [str(on_field)]
+
+
+def _extract_jobs(jobs_field: Any) -> list[JobInfo]:
+    if not isinstance(jobs_field, dict):
+        return []
+    result: list[JobInfo] = []
+    for job_id, job_def in jobs_field.items():
+        if not isinstance(job_def, dict):
+            continue
+        steps: list[dict] = job_def.get("steps", []) or []
+        actions: list[ActionReference] = []
+        for step in steps:
+            if isinstance(step, dict) and (uses := step.get("uses")):
+                actions.append(ActionReference(uses=uses, name=step.get("name")))
+        runs_on = job_def.get("runs-on", "unknown")
+        result.append(
+            JobInfo(
+                job_id=str(job_id),
+                name=job_def.get("name"),
+                runs_on=runs_on,
+                steps_count=len(steps),
+                actions_used=actions,
+            )
+        )
+    return result

@@ -1,0 +1,45 @@
+---
+interface Props {
+  org: string;
+  repoCount: number;
+  workflowCount: number;
+  href: string;
+}
+
+const { org, repoCount, workflowCount, href } = Astro.props;
+const avatarUrl = `https://github.com/${org}.png?size=80`;
+---
+
+<a
+  href={href}
+  class="flex items-center gap-4 bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
+>
+  <img
+    src={avatarUrl}
+    alt={`${org} avatar`}
+    width="48"
+    height="48"
+    class="rounded-full border border-gray-200"
+    loading="lazy"
+  />
+  <div class="min-w-0">
+    <p class="font-semibold text-gray-900 truncate">{org}</p>
+    <p class="text-sm text-gray-500">
+      {repoCount} repo{repoCount !== 1 ? 's' : ''} &middot; {workflowCount} workflow{workflowCount !== 1 ? 's' : ''}
+    </p>
+  </div>
+  <svg
+    class="ml-auto text-gray-400 shrink-0"
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+</a>

@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OrgSummary from '../components/OrgSummary.astro';
+import SearchFilter from '../components/SearchFilter.astro';
+import WorkflowCard from '../components/WorkflowCard.astro';
+
+const base = import.meta.env.BASE_URL;
+const all = await getCollection('workflows');
+
+// Group by org
+const byOrg = all.reduce<Record<string, typeof all>>((acc, w) => {
+  (acc[w.data.org] ??= []).push(w);
+  return acc;
+}, {});
+
+const orgs = Object.keys(byOrg).sort();
+
+// Stats
+const totalRepos = new Set(all.map((w) => `${w.data.org}/${w.data.repo_name}`)).size;
+
+// Last updated (most recent fetch timestamp)
+const lastUpdated = all.reduce<Date | null>((max, w) => {
+  const d = w.data.last_fetched;
+  return !max || d > max ? d : max;
+}, null);
+
+const lastUpdatedStr = lastUpdated
+  ? lastUpdated.toLocaleDateString('en-US', { dateStyle: 'medium' })
+  : 'unknown';
+
+// For searchable workflow cards
+const workflowCards = all.map((w) => ({
+  ...w.data,
+  detailHref: `${base}${w.data.org}/${w.data.repo_name}/`,
+  searchText: [
+    w.data.org,
+    w.data.repo_name,
+    w.data.workflow_name,
+    w.data.workflow_file,
+    ...w.data.on_triggers,
+    ...w.data.jobs.flatMap((j) => j.actions_used.map((a) => a.uses)),
+  ].join(' '),
+}));
+---
+
+<BaseLayout title="Home">
+  <!-- Hero -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">CI/CD Workflow Inventory</h1>
+    <p class="text-gray-600">
+      {all.length} workflows across {totalRepos} repositories in {orgs.length} organizations.
+      Last updated: {lastUpdatedStr}.
+    </p>
+  </div>
+
+  <!-- Org cards -->
+  <section class="mb-10">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Organizations</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {orgs.map((org) => {
+        const workflows = byOrg[org];
+        const repos = new Set(workflows.map((w) => w.data.repo_name)).size;
+        return (
+          <OrgSummary
+            org={org}
+            repoCount={repos}
+            workflowCount={workflows.length}
+            href={`${base}${org}/`}
+          />
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- All workflows with search -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">All Workflows</h2>
+    <SearchFilter />
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {workflowCards.map((w) => (
+        <WorkflowCard
+          org={w.org}
+          repoName={w.repo_name}
+          repoUrl={w.repo_url}
+          workflowFile={w.workflow_file}
+          workflowName={w.workflow_name}
+          onTriggers={w.on_triggers}
+          jobs={w.jobs}
+          statusBadgeUrl={w.status_badge_url}
+          detailHref={w.detailHref}
+          searchText={w.searchText}
+        />
+      ))}
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,114 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkflowCard from '../../components/WorkflowCard.astro';
+import SearchFilter from '../../components/SearchFilter.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('workflows');
+  const orgs = [...new Set(all.map((w) => w.data.org))];
+  return orgs.map((org) => ({
+    params: { org },
+    props: { workflows: all.filter((w) => w.data.org === org) },
+  }));
+}
+
+const { org } = Astro.params;
+const { workflows } = Astro.props;
+const base = import.meta.env.BASE_URL;
+
+// Group by repo
+const byRepo = workflows.reduce<Record<string, typeof workflows>>((acc, w) => {
+  (acc[w.data.repo_name] ??= []).push(w);
+  return acc;
+}, {});
+
+const repos = Object.keys(byRepo).sort();
+
+const cards = workflows.map((w) => ({
+  ...w.data,
+  detailHref: `${base}${org}/${w.data.repo_name}/`,
+  searchText: [
+    w.data.repo_name,
+    w.data.workflow_name,
+    w.data.workflow_file,
+    ...w.data.on_triggers,
+    ...w.data.jobs.flatMap((j) => j.actions_used.map((a) => a.uses)),
+  ].join(' '),
+}));
+---
+
+<BaseLayout title={org} description={`GitHub Actions workflows in the ${org} organization.`}>
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-500 mb-6">
+    <a href={base} class="hover:text-blue-600">Home</a>
+    <span class="mx-1">/</span>
+    <span class="text-gray-800 font-medium">{org}</span>
+  </nav>
+
+  <!-- Header -->
+  <div class="flex items-center gap-4 mb-8">
+    <img
+      src={`https://github.com/${org}.png?size=64`}
+      alt={`${org} avatar`}
+      width="56"
+      height="56"
+      class="rounded-full border border-gray-200"
+    />
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{org}</h1>
+      <p class="text-gray-500 text-sm">
+        {repos.length} repo{repos.length !== 1 ? 's' : ''} &middot; {workflows.length} workflow{workflows.length !== 1 ? 's' : ''}
+      </p>
+    </div>
+  </div>
+
+  <!-- Repo overview table -->
+  <section class="mb-10">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Repositories</h2>
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left px-4 py-3 font-medium text-gray-600">Repository</th>
+            <th class="text-right px-4 py-3 font-medium text-gray-600">Workflows</th>
+          </tr>
+        </thead>
+        <tbody>
+          {repos.map((repo, i) => (
+            <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <td class="px-4 py-3">
+                <a href={`${base}${org}/${repo}/`} class="text-blue-700 hover:underline font-medium">
+                  {repo}
+                </a>
+              </td>
+              <td class="px-4 py-3 text-right text-gray-500">{byRepo[repo].length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- All workflows in org with search -->
+  <section>
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">All Workflows</h2>
+    <SearchFilter placeholder={`Search ${org} workflows…`} />
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {cards.map((w) => (
+        <WorkflowCard
+          org={org}
+          repoName={w.repo_name}
+          repoUrl={w.repo_url}
+          workflowFile={w.workflow_file}
+          workflowName={w.workflow_name}
+          onTriggers={w.on_triggers}
+          jobs={w.jobs}
+          statusBadgeUrl={w.status_badge_url}
+          detailHref={w.detailHref}
+          searchText={w.searchText}
+        />
+      ))}
+    </div>
+  </section>
+</BaseLayout>

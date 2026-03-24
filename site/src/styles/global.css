@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root {
+  --color-brand: #1a56db;
+  --color-brand-dark: #1e429f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Syntax highlight for raw YAML blocks */
+pre.yaml-block {
+  @apply bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto text-sm leading-relaxed;
+}
