@@ -72,7 +72,8 @@ jobs:
     timeout-minutes: 20
 
     permissions:
-      contents: read   # checkout only
+      contents: read
+      pages: read    # required by actions/configure-pages (called internally by withastro/action)
 
     steps:
       - name: Checkout
@@ -84,35 +85,11 @@ jobs:
           name: workflow-data
           path: site/src/content/workflows/
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - name: Build and upload Astro site
+        uses: withastro/action@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
-          cache-dependency-path: site/pnpm-lock.yaml
-
-      - name: Install site dependencies
-        working-directory: site
-        run: pnpm install --frozen-lockfile
-
-      - name: Build site
-        working-directory: site
-        env:
-          # Standard GitHub Pages: https://{owner}.github.io/{repo}
-          # Override with repository variables for custom domains:
-          #   vars.PAGES_SITE_URL = https://your.domain
-          #   vars.PAGES_BASE_PATH = /   (or leave unset for root)
-          SITE_URL: ${{ vars.PAGES_SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
-          BASE_PATH: ${{ vars.PAGES_BASE_PATH || format('/{0}', github.event.repository.name) }}
-        run: pnpm build
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/dist/
+          path: site
+          package-manager: pnpm
 
   # -----------------------------------------------------------------------
   # Job 3: Deploy the Pages artifact
