@@ -100,6 +100,13 @@ jobs:
 
       - name: Build site
         working-directory: site
+        env:
+          # Standard GitHub Pages: https://{owner}.github.io/{repo}
+          # Override with repository variables for custom domains:
+          #   vars.PAGES_SITE_URL = https://your.domain
+          #   vars.PAGES_BASE_PATH = /   (or leave unset for root)
+          SITE_URL: ${{ vars.PAGES_SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+          BASE_PATH: ${{ vars.PAGES_BASE_PATH || format('/{0}', github.event.repository.name) }}
         run: pnpm build
 
       - name: Upload Pages artifact
