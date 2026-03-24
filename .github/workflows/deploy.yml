@@ -17,6 +17,9 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   # -----------------------------------------------------------------------
   # Job 1: Run the Python extractor to fetch workflow data from GitHub
@@ -77,9 +80,6 @@ jobs:
       contents: read
       pages: read
 
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -115,9 +115,6 @@ jobs:
     permissions:
       pages: write       # deploy to Pages
       id-token: write    # OIDC token required by deploy-pages
-
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     environment:
       name: github-pages
