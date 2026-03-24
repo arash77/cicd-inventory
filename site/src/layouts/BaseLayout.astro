@@ -17,19 +17,19 @@ const base = import.meta.env.BASE_URL;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title} — CI/CD Inventory</title>
-    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   </head>
   <body class="min-h-full bg-gray-50 text-gray-900 flex flex-col">
     <!-- Nav -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-6">
-        <a href={base} class="font-bold text-blue-700 text-lg tracking-tight hover:text-blue-900">
+        <a href={`${base}/`} class="font-bold text-blue-700 text-lg tracking-tight hover:text-blue-900">
           CI/CD Inventory
         </a>
         <nav class="flex gap-4 text-sm text-gray-600">
-          <a href={`${base}BioContainers/`} class="hover:text-blue-700">BioContainers</a>
-          <a href={`${base}galaxyproject/`} class="hover:text-blue-700">galaxyproject</a>
-          <a href={`${base}usegalaxy-eu/`} class="hover:text-blue-700">usegalaxy-eu</a>
+          <a href={`${base}/BioContainers/`} class="hover:text-blue-700">BioContainers</a>
+          <a href={`${base}/galaxyproject/`} class="hover:text-blue-700">galaxyproject</a>
+          <a href={`${base}/usegalaxy-eu/`} class="hover:text-blue-700">usegalaxy-eu</a>
         </nav>
         <span class="ml-auto text-xs text-gray-400">Auto-updated daily</span>
       </div>
