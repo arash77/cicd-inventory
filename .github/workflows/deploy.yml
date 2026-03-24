@@ -75,11 +75,15 @@ jobs:
 
     permissions:
       contents: read
-      pages: read    # required by actions/configure-pages (called internally by withastro/action)
+      pages: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
 
       - name: Download workflow data
         uses: actions/download-artifact@v8
@@ -92,6 +96,9 @@ jobs:
         with:
           path: site
           package-manager: pnpm
+        env:
+          SITE: ${{ steps.pages.outputs.origin }}
+          BASE_URL: ${{ steps.pages.outputs.base_path }}
 
   # -----------------------------------------------------------------------
   # Job 3: Deploy the Pages artifact
