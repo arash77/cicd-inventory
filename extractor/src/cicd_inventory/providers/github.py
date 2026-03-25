@@ -17,7 +17,7 @@ from cicd_inventory.queries import REPO_DISCOVERY_QUERY, RepoRef, build_workflow
 log = logging.getLogger(__name__)
 
 _GRAPHQL_URL = "https://api.github.com/graphql"
-_BATCH_SIZE = 20          # repos per aliased batch query
+_BATCH_SIZE = 20  # repos per aliased batch query
 _RATE_LIMIT_BUFFER = 200  # sleep when remaining points drop below this
 
 
@@ -148,7 +148,10 @@ class GitHubProvider(RepositoryProvider):
             return None
 
         workflow_name: str = doc.get("name") or filename
-        on_triggers: list[str] = _extract_triggers(doc.get("on", {}))
+        # PyYAML (YAML 1.1) parses the bare key `on` as the boolean True.
+        # We must check both the string "on" (for quoted keys) and True (for
+        # the common unquoted form used in virtually all GitHub Actions files).
+        on_triggers: list[str] = _extract_triggers(doc.get("on") or doc.get(True, {}))
         jobs: list[JobInfo] = _extract_jobs(doc.get("jobs", {}))
 
         repo_url = f"https://github.com/{org}/{repo}"
@@ -237,6 +240,7 @@ class GitHubProvider(RepositoryProvider):
 # ---------------------------------------------------------------------------
 # YAML parsing helpers
 # ---------------------------------------------------------------------------
+
 
 def _extract_triggers(on_field: Any) -> list[str]:
     """Normalise the ``on:`` key into a flat list of event names."""
