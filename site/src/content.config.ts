@@ -27,6 +27,7 @@ const workflows = defineCollection({
     on_triggers: z.array(z.string()),
     jobs: z.array(jobSchema),
     status_badge_url: z.string().url(),
+    last_run_status: z.string().nullable().optional(),
     last_fetched: z.coerce.date(),
     raw_yaml: z.string(),
   }),

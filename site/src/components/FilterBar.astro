@@ -3,6 +3,7 @@ interface Props {
   orgs?: string[];
   triggers?: string[];
   repos?: string[];
+  statuses?: string[];
   reposByOrg?: Record<string, string[]>;
   showOrgFilter?: boolean;
   placeholder?: string;
@@ -12,10 +13,15 @@ const {
   orgs = [],
   triggers = [],
   repos = [],
+  statuses = [],
   reposByOrg = {},
   showOrgFilter = false,
   placeholder = 'Search workflows, repos, orgs, actions…',
 } = Astro.props;
+
+function formatStatus(s: string): string {
+  return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 const chevron = `<svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>`;
 const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 cursor-pointer text-slate-700';
@@ -90,6 +96,17 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
       <Fragment set:html={chevron} />
     </div>
   )}
+
+  {statuses.length > 0 && (
+    <div class="relative">
+      <label for="filter-status" class="sr-only">Filter by status</label>
+      <select id="filter-status" aria-label="Filter by status" class={selectClass}>
+        <option value="">All statuses</option>
+        {statuses.map((s) => <option value={s}>{formatStatus(s)}</option>)}
+      </select>
+      <Fragment set:html={chevron} />
+    </div>
+  )}
 </div>
 
 <div
@@ -108,6 +125,7 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
   const orgSelect = document.getElementById('filter-org');
   const triggerSelect = document.getElementById('filter-trigger');
   const repoSelect = document.getElementById('filter-repo');
+  const statusSelect = document.getElementById('filter-status');
   const noResults = document.getElementById('search-no-results');
 
   function applyFilters() {
@@ -115,6 +133,7 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
     const selectedOrg = orgSelect ? orgSelect.value : '';
     const selectedTrigger = triggerSelect ? triggerSelect.value : '';
     const selectedRepo = repoSelect ? repoSelect.value : '';
+    const selectedStatus = statusSelect ? statusSelect.value : '';
 
     let visible = 0;
 
@@ -124,12 +143,14 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
       const elOrg = el.dataset.org ?? '';
       const elRepo = el.dataset.repo ?? '';
       const elTriggers = (el.dataset.triggers ?? '').split(' ').filter(Boolean);
+      const elStatus = el.dataset.status ?? 'unknown';
 
       const matches =
         (!query || searchText.includes(query)) &&
         (!selectedOrg || elOrg === selectedOrg) &&
         (!selectedTrigger || elTriggers.includes(selectedTrigger)) &&
-        (!selectedRepo || elRepo === selectedRepo);
+        (!selectedRepo || elRepo === selectedRepo) &&
+        (!selectedStatus || elStatus === selectedStatus);
 
       el.style.display = matches ? '' : 'none';
       if (matches) visible++;
@@ -201,5 +222,9 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
 
   if (repoSelect) {
     repoSelect.addEventListener('change', applyFilters);
+  }
+
+  if (statusSelect) {
+    statusSelect.addEventListener('change', applyFilters);
   }
 </script>

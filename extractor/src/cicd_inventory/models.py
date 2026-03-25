@@ -41,6 +41,7 @@ class WorkflowRecord(BaseModel):
     on_triggers: list[str]
     jobs: list[JobInfo] = []
     status_badge_url: str
+    last_run_status: str | None = None
     last_fetched: datetime
     raw_yaml: str
 

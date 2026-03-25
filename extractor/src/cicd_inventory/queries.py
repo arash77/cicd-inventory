@@ -41,10 +41,12 @@ query($org: String!, $cursor: String) {
 # Workflow batch fetching — aliased multi-repo query
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class RepoRef:
     owner: str
     name: str
+    default_branch: str = "main"
 
 
 def build_workflow_batch_query(repos: list[RepoRef]) -> str:

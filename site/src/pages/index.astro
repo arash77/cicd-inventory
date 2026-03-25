@@ -40,6 +40,7 @@ const workflowCards = all.map((w) => ({
 
 const uniqueTriggers = [...new Set(all.flatMap((w) => w.data.on_triggers))].sort();
 const uniqueRepos = [...new Set(all.map((w) => w.data.repo_name))].sort();
+const uniqueStatuses = [...new Set(all.map((w) => w.data.last_run_status ?? 'unknown'))].sort();
 const reposByOrg = Object.fromEntries(
   Object.entries(byOrg).map(([o, workflows]) => [
     o,
@@ -79,6 +80,7 @@ const stats = [
     orgs={orgs}
     triggers={uniqueTriggers}
     repos={uniqueRepos}
+    statuses={uniqueStatuses}
     reposByOrg={reposByOrg}
     showOrgFilter={true}
   />
@@ -127,6 +129,7 @@ const stats = [
           onTriggers={w.on_triggers}
           jobs={w.jobs}
           statusBadgeUrl={w.status_badge_url}
+          lastRunStatus={w.last_run_status}
           detailHref={w.detailHref}
           searchText={w.searchText}
         />

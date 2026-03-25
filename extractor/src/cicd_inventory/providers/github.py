@@ -74,7 +74,13 @@ class GitHubProvider(RepositoryProvider):
                     continue
                 if node["defaultBranchRef"] is None:
                     continue  # empty repo
-                repos.append(RepoRef(owner=org, name=node["name"]))
+                repos.append(
+                    RepoRef(
+                        owner=org,
+                        name=node["name"],
+                        default_branch=node["defaultBranchRef"]["name"],
+                    )
+                )
 
             page_info = repo_conn["pageInfo"]
             if not page_info["hasNextPage"]:
@@ -96,9 +102,17 @@ class GitHubProvider(RepositoryProvider):
         return records
 
     async def _fetch_workflow_batch(self, repos: list[RepoRef]) -> list[WorkflowRecord]:
-        query = build_workflow_batch_query(repos)
-        data = await self._graphql(query)
+        # Fire the GraphQL workflow-tree query and all REST run-status calls concurrently.
+        results = await asyncio.gather(
+            self._graphql(build_workflow_batch_query(repos)),
+            *[self._fetch_run_statuses(repo) for repo in repos],
+        )
+        data: dict[str, Any] = results[0]
+        status_maps: list[dict[str, str]] = list(results[1:])
         await self._check_rate_limit(data)
+
+        # Build a {repo_name: {workflow_filename: conclusion}} lookup.
+        repo_statuses: dict[str, dict[str, str]] = {repo.name: sm for repo, sm in zip(repos, status_maps)}
 
         records: list[WorkflowRecord] = []
         for i, repo in enumerate(repos):
@@ -126,9 +140,37 @@ class GitHubProvider(RepositoryProvider):
                 raw_text: str = blob["text"]
                 record = self._parse_workflow_yaml(raw_text, repo.owner, repo.name, filename)
                 if record:
+                    record.last_run_status = repo_statuses.get(repo.name, {}).get(filename)
                     records.append(record)
 
         return records
+
+    async def _fetch_run_statuses(self, repo: RepoRef) -> dict[str, str]:
+        """Return {workflow_filename: conclusion} for the most recent run of each workflow in a repo.
+
+        Uses the GitHub REST API (one call per repo) to find the latest
+        completed or in-progress run for every workflow file.
+        """
+        url = f"https://api.github.com/repos/{repo.owner}/{repo.name}/actions/runs"
+        try:
+            resp = await self._client.get(url, params={"per_page": "100", "branch": repo.default_branch})
+            if resp.status_code in (403, 404):
+                return {}
+            resp.raise_for_status()
+            runs: list[dict] = resp.json().get("workflow_runs", [])
+        except Exception as exc:
+            log.warning("Could not fetch run statuses for %s/%s: %s", repo.owner, repo.name, exc)
+            return {}
+
+        # The list is newest-first; keep only the first (most recent) entry per filename.
+        statuses: dict[str, str] = {}
+        for run in runs:
+            path: str = run.get("path", "")
+            filename = path.rsplit("/", 1)[-1] if path else ""
+            if filename and filename not in statuses:
+                # conclusion is None while the run is still queued / in_progress
+                statuses[filename] = run.get("conclusion") or "running"
+        return statuses
 
     # ------------------------------------------------------------------
     # YAML → WorkflowRecord

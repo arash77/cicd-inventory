@@ -26,6 +26,7 @@ const byRepo = workflows.reduce<Record<string, typeof workflows>>((acc, w) => {
 const repos = Object.keys(byRepo).sort();
 
 const uniqueTriggers = [...new Set(workflows.flatMap((w) => w.data.on_triggers))].sort();
+const uniqueStatuses = [...new Set(workflows.map((w) => w.data.last_run_status ?? 'unknown'))].sort();
 
 const cards = workflows.map((w) => ({
   ...w.data,
@@ -97,6 +98,7 @@ const cards = workflows.map((w) => ({
     <FilterBar
       triggers={uniqueTriggers}
       repos={repos}
+      statuses={uniqueStatuses}
       showOrgFilter={false}
       placeholder={`Search ${org} workflows…`}
     />
@@ -111,6 +113,7 @@ const cards = workflows.map((w) => ({
           onTriggers={w.on_triggers}
           jobs={w.jobs}
           statusBadgeUrl={w.status_badge_url}
+          lastRunStatus={w.last_run_status}
           detailHref={w.detailHref}
           searchText={w.searchText}
         />

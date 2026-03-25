@@ -56,10 +56,15 @@ test.describe('Homepage', () => {
     await expect(input).toHaveValue('');
   });
 
-  test('filter bar renders org, trigger and repo dropdowns', async ({ page }) => {
+  test('filter bar renders org, trigger, repo and status dropdowns', async ({ page }) => {
     await expect(page.locator('#filter-org')).toBeVisible();
     await expect(page.locator('#filter-trigger')).toBeVisible();
     await expect(page.locator('#filter-repo')).toBeVisible();
+    await expect(page.locator('#filter-status')).toBeVisible();
+  });
+
+  test('status filter dropdown has at least one real option', async ({ page }) => {
+    await expect(page.locator('#filter-status option:not([value=""])').first()).toBeAttached();
   });
 
   test('org filter dropdown has at least one real option', async ({ page }) => {
@@ -109,6 +114,44 @@ test.describe('Homepage', () => {
     await page.locator('#filter-trigger').selectOption(firstTrigger!);
     await page.waitForTimeout(200);
     await page.locator('#filter-trigger').selectOption('');
+    await page.waitForTimeout(200);
+
+    const visibleCount = await cards.evaluateAll(
+      (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
+    );
+    expect(visibleCount).toBe(total);
+  });
+
+  test('status filter hides non-matching workflow cards', async ({ page }) => {
+    const cards = page.locator('article[aria-label^="Workflow:"]');
+    const total = await cards.count();
+    const statusOptions = page.locator('#filter-status option:not([value=""])');
+    if (total === 0 || (await statusOptions.count()) === 0) test.skip();
+
+    const firstStatus = await statusOptions.first().getAttribute('value');
+    if (!firstStatus) test.skip();
+
+    await page.locator('#filter-status').selectOption(firstStatus!);
+    await page.waitForTimeout(200);
+
+    const visibleCount = await cards.evaluateAll(
+      (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
+    );
+    expect(visibleCount).toBeLessThan(total);
+  });
+
+  test('resetting status filter restores all cards', async ({ page }) => {
+    const cards = page.locator('article[aria-label^="Workflow:"]');
+    const total = await cards.count();
+    const statusOptions = page.locator('#filter-status option:not([value=""])');
+    if (total === 0 || (await statusOptions.count()) === 0) test.skip();
+
+    const firstStatus = await statusOptions.first().getAttribute('value');
+    if (!firstStatus) test.skip();
+
+    await page.locator('#filter-status').selectOption(firstStatus!);
+    await page.waitForTimeout(200);
+    await page.locator('#filter-status').selectOption('');
     await page.waitForTimeout(200);
 
     const visibleCount = await cards.evaluateAll(
@@ -230,8 +273,9 @@ test.describe('Homepage', () => {
   });
 
   test('passes accessibility scan', async ({ page }) => {
+    test.setTimeout(60_000);
     await checkAccessibility(page);
-  }, 60_000);
+  });
 });
 
 test.describe('Homepage — mobile viewport', () => {

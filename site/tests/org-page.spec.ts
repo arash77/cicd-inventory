@@ -53,6 +53,10 @@ test.describe('Org page', () => {
     await expect(page.locator('#filter-repo')).toBeVisible();
   });
 
+  test('status filter renders on org page', async ({ page }) => {
+    await expect(page.locator('#filter-status')).toBeVisible();
+  });
+
   test('org filter does NOT render on org page', async ({ page }) => {
     await expect(page.locator('#filter-org')).not.toBeAttached();
   });
