@@ -15,6 +15,10 @@ site/node_modules/
 site/dist/
 site/.astro/
 
+# Playwright
+site/playwright-report/
+site/test-results/
+
 # Generated content (populated by the extractor at build time)
 site/src/content/workflows/
 
