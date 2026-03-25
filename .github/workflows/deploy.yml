@@ -107,6 +107,7 @@ jobs:
         env:
           ASTRO_SITE: ${{ steps.pages.outputs.origin }}
           ASTRO_BASE: ${{ steps.pages.outputs.base_path }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
 
   # -----------------------------------------------------------------------
   # Job 3: Deploy the Pages artifact
