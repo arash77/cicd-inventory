@@ -5,7 +5,7 @@ import OrgSummary from '../components/OrgSummary.astro';
 import SearchFilter from '../components/SearchFilter.astro';
 import WorkflowCard from '../components/WorkflowCard.astro';
 
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const all = await getCollection('workflows');
 
 const byOrg = all.reduce<Record<string, typeof all>>((acc, w) => {
@@ -45,7 +45,7 @@ const stats = [
 ];
 ---
 
-<BaseLayout title="Home">
+<BaseLayout title="CI/CD Workflow Inventory">
   <!-- Hero -->
   <div class="mb-10">
     <h1 class="text-3xl font-bold text-slate-900 mb-3 tracking-tight">CI/CD Workflow Inventory</h1>
@@ -55,7 +55,7 @@ const stats = [
     </p>
 
     <!-- Stats -->
-    <div class="grid grid-cols-3 gap-4 mt-6 max-w-xl">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 max-w-xl">
       {stats.map((s) => (
         <div class="bg-white rounded-xl border border-slate-200 px-4 py-3 text-center">
           <div class="text-2xl font-bold text-blue-600">{s.value}</div>

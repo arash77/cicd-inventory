@@ -34,7 +34,7 @@ const {
     placeholder={placeholder}
     aria-label="Search workflows"
     aria-describedby="search-no-results"
-    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 placeholder:text-slate-400"
+    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 placeholder:text-slate-500"
     autocomplete="off"
     spellcheck="false"
   />
@@ -66,5 +66,13 @@ const {
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(applyFilter, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && input.value) {
+      input.value = '';
+      clearTimeout(debounceTimer);
+      applyFilter();
+    }
   });
 </script>

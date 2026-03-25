@@ -97,3 +97,8 @@ pre.yaml-block {
 .data-table tbody tr:hover {
   background-color: #f1f5f9 !important;
 }
+.data-table tbody tr:focus-within {
+  background-color: #f1f5f9 !important;
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+}
