@@ -7,6 +7,7 @@ interface Props {
   reposByOrg?: Record<string, string[]>;
   showOrgFilter?: boolean;
   placeholder?: string;
+  pageSize?: number;
 }
 
 const {
@@ -17,6 +18,7 @@ const {
   reposByOrg = {},
   showOrgFilter = false,
   placeholder = 'Search workflows, repos, orgs, actions…',
+  pageSize,
 } = Astro.props;
 
 function formatStatus(s: string): string {
@@ -107,6 +109,18 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
       <Fragment set:html={chevron} />
     </div>
   )}
+
+  {pageSize && (
+    <div class="relative ml-auto">
+      <label for="per-page-select" class="sr-only">Items per page</label>
+      <select id="per-page-select" aria-label="Items per page" class={selectClass}>
+        {[10, 20, 30, 50, 100].map((n) => (
+          <option value={n} selected={n === pageSize}>{n} per page</option>
+        ))}
+      </select>
+      <Fragment set:html={chevron} />
+    </div>
+  )}
 </div>
 
 <div
@@ -120,13 +134,101 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
   No results match your filters.
 </div>
 
-<script define:vars={{ reposByOrg, showOrgFilter }}>
+<script define:vars={{ reposByOrg, showOrgFilter, pageSize }}>
   const searchInput = document.getElementById('search-input');
   const orgSelect = document.getElementById('filter-org');
   const triggerSelect = document.getElementById('filter-trigger');
   const repoSelect = document.getElementById('filter-repo');
   const statusSelect = document.getElementById('filter-status');
+  const perPageSelect = document.getElementById('per-page-select');
   const noResults = document.getElementById('search-no-results');
+
+  let currentPage = 1;
+  let currentPageSize = pageSize;
+
+  function pageRange(current, total) {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages = new Set([1, total, current]);
+    for (let d = 1; d <= 2; d++) {
+      if (current - d >= 1) pages.add(current - d);
+      if (current + d <= total) pages.add(current + d);
+    }
+    const sorted = Array.from(pages).sort((a, b) => a - b);
+    const result = [];
+    let prev = 0;
+    for (const p of sorted) {
+      if (p - prev > 1) result.push(null);
+      result.push(p);
+      prev = p;
+    }
+    return result;
+  }
+
+  function renderPagination(total, totalPages) {
+    const paginationEl = document.getElementById('pagination-controls');
+    if (!paginationEl) return;
+    if (!currentPageSize || totalPages <= 1) {
+      paginationEl.innerHTML = '';
+      const topEl = document.getElementById('pagination-controls-top');
+      if (topEl) topEl.innerHTML = '';
+      return;
+    }
+    const start = (currentPage - 1) * currentPageSize + 1;
+    const end = Math.min(currentPage * currentPageSize, total);
+    const base = 'inline-flex items-center justify-center min-w-[2rem] px-2.5 py-1.5 text-sm rounded-lg font-medium transition-colors cursor-pointer select-none';
+    const active = `${base} bg-blue-600 text-white shadow-sm`;
+    const inactive = `${base} text-slate-600 hover:bg-slate-100 border border-slate-200`;
+    const disabled = `${base} text-slate-300 border border-slate-200 cursor-not-allowed`;
+
+    const pages = pageRange(currentPage, totalPages);
+
+    function buildNav(suffix, label) {
+      let btns = '';
+      for (const p of pages) {
+        if (p === null) {
+          btns += `<span class="px-1 text-slate-400 select-none" aria-hidden="true">…</span>`;
+        } else {
+          btns += `<button class="pg-btn ${p === currentPage ? active : inactive}" data-page="${p}" ${p === currentPage ? 'aria-current="page"' : ''} aria-label="Page ${p}">${p}</button>`;
+        }
+      }
+      return `
+        <div class="flex items-center justify-between flex-wrap gap-3 py-4">
+          <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">${start}–${end}</span> of <span class="font-medium text-slate-700">${total}</span> workflows</p>
+          <nav class="flex items-center gap-1" aria-label="${label}" role="navigation">
+            <button id="pg-prev${suffix}" class="${currentPage === 1 ? disabled : inactive}" ${currentPage === 1 ? 'disabled aria-disabled="true"' : ''} aria-label="Previous page">‹ Prev</button>
+            ${btns}
+            <button id="pg-next${suffix}" class="${currentPage === totalPages ? disabled : inactive}" ${currentPage === totalPages ? 'disabled aria-disabled="true"' : ''} aria-label="Next page">Next ›</button>
+          </nav>
+        </div>`;
+    }
+
+    paginationEl.innerHTML = buildNav('-bottom', 'Workflow pagination, bottom');
+    const topEl = document.getElementById('pagination-controls-top');
+    if (topEl) topEl.innerHTML = buildNav('-top', 'Workflow pagination, top');
+
+    function bindNav(suffix) {
+      document.getElementById(`pg-prev${suffix}`)?.addEventListener('click', () => {
+        if (currentPage > 1) { currentPage--; applyFilters(); scrollToWorkflows(); }
+      });
+      document.getElementById(`pg-next${suffix}`)?.addEventListener('click', () => {
+        if (currentPage < totalPages) { currentPage++; applyFilters(); scrollToWorkflows(); }
+      });
+    }
+    bindNav('-bottom');
+    bindNav('-top');
+
+    document.querySelectorAll('.pg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.dataset.page);
+        if (p !== currentPage) { currentPage = p; applyFilters(); scrollToWorkflows(); }
+      });
+    });
+  }
+
+  function scrollToWorkflows() {
+    const section = document.getElementById('all-workflows');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -135,9 +237,8 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
     const selectedRepo = repoSelect ? repoSelect.value : '';
     const selectedStatus = statusSelect ? statusSelect.value : '';
 
-    let visible = 0;
-
-    // Workflow cards (identified by presence of data-triggers attribute)
+    // --- Workflow cards ---
+    const matchingWorkflows = [];
     document.querySelectorAll('[data-search-text][data-triggers]').forEach((el) => {
       const searchText = (el.dataset.searchText ?? '').toLowerCase();
       const elOrg = el.dataset.org ?? '';
@@ -152,11 +253,25 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
         (!selectedRepo || elRepo === selectedRepo) &&
         (!selectedStatus || elStatus === selectedStatus);
 
-      el.style.display = matches ? '' : 'none';
-      if (matches) visible++;
+      if (!matches) { el.style.display = 'none'; return; }
+      matchingWorkflows.push(el);
     });
 
-    // Org summary cards (no data-triggers) — only filter by search text + org
+    if (currentPageSize && matchingWorkflows.length > 0) {
+      const totalPages = Math.ceil(matchingWorkflows.length / currentPageSize);
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * currentPageSize;
+      matchingWorkflows.forEach((el, i) => {
+        el.style.display = (i >= start && i < start + currentPageSize) ? '' : 'none';
+      });
+      renderPagination(matchingWorkflows.length, totalPages);
+    } else {
+      matchingWorkflows.forEach((el) => (el.style.display = ''));
+      renderPagination(0, 0);
+    }
+
+    // --- Org summary cards (no data-triggers) — filter by search + org only ---
+    let visibleOrgs = 0;
     document.querySelectorAll('[data-search-text]:not([data-triggers])').forEach((el) => {
       const searchText = (el.dataset.searchText ?? '').toLowerCase();
       const elOrg = el.dataset.org ?? '';
@@ -166,10 +281,10 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
         (!selectedOrg || elOrg === selectedOrg);
 
       el.style.display = matches ? '' : 'none';
-      if (matches) visible++;
+      if (matches) visibleOrgs++;
     });
 
-    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+    if (noResults) noResults.classList.toggle('hidden', matchingWorkflows.length > 0 || visibleOrgs > 0);
   }
 
   function updateRepoDropdown() {
@@ -198,12 +313,14 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
   if (searchInput) {
     searchInput.addEventListener('input', () => {
       clearTimeout(debounceTimer);
+      currentPage = 1;
       debounceTimer = setTimeout(applyFilters, 150);
     });
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && searchInput.value) {
         searchInput.value = '';
         clearTimeout(debounceTimer);
+        currentPage = 1;
         applyFilters();
       }
     });
@@ -211,20 +328,25 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
 
   if (orgSelect) {
     orgSelect.addEventListener('change', () => {
+      currentPage = 1;
       updateRepoDropdown();
       applyFilters();
     });
   }
 
-  if (triggerSelect) {
-    triggerSelect.addEventListener('change', applyFilters);
-  }
+  if (triggerSelect) triggerSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  if (repoSelect) repoSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  if (statusSelect) statusSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  if (perPageSelect) perPageSelect.addEventListener('change', () => {
+    currentPageSize = parseInt(perPageSelect.value);
+    currentPage = 1;
+    applyFilters();
+  });
 
-  if (repoSelect) {
-    repoSelect.addEventListener('change', applyFilters);
-  }
-
-  if (statusSelect) {
-    statusSelect.addEventListener('change', applyFilters);
+  // Run once the full DOM is ready so all workflow cards exist.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(applyFilters, 0));
+  } else {
+    setTimeout(applyFilters, 0);
   }
 </script>

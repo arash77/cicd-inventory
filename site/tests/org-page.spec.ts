@@ -2,19 +2,11 @@ import { test, expect } from '@playwright/test';
 import { checkAccessibility } from './helpers/axe';
 
 test.describe('Org page', () => {
-  let orgHref: string;
+  // Navigate directly to a known org page to avoid loading the heavy 394-card homepage.
+  const orgHref = '/BioContainers/';
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    // Discover the first org card dynamically
-    const orgCard = page.locator('[aria-label^="View "]').first();
-    const count = await orgCard.count();
-    if (count === 0) {
-      test.skip();
-      return;
-    }
-    orgHref = (await orgCard.getAttribute('href')) ?? '/';
-    await page.goto(orgHref);
+    await page.goto(orgHref, { waitUntil: 'domcontentloaded' });
   });
 
   test('has breadcrumb with Home link', async ({ page }) => {

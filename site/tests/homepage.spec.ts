@@ -119,7 +119,9 @@ test.describe('Homepage', () => {
     const visibleCount = await cards.evaluateAll(
       (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
     );
-    expect(visibleCount).toBe(total);
+    expect(visibleCount).toBeGreaterThan(0);
+    expect(visibleCount).toBeLessThanOrEqual(30);
+    await expect(page.locator('#pagination-controls')).toContainText(`of ${total}`);
   });
 
   test('status filter hides non-matching workflow cards', async ({ page }) => {
@@ -157,7 +159,9 @@ test.describe('Homepage', () => {
     const visibleCount = await cards.evaluateAll(
       (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
     );
-    expect(visibleCount).toBe(total);
+    expect(visibleCount).toBeGreaterThan(0);
+    expect(visibleCount).toBeLessThanOrEqual(30);
+    await expect(page.locator('#pagination-controls')).toContainText(`of ${total}`);
   });
 
   test('repo filter hides non-matching workflow cards', async ({ page }) => {
@@ -193,7 +197,9 @@ test.describe('Homepage', () => {
     const visibleCount = await cards.evaluateAll(
       (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
     );
-    expect(visibleCount).toBe(total);
+    expect(visibleCount).toBeGreaterThan(0);
+    expect(visibleCount).toBeLessThanOrEqual(30);
+    await expect(page.locator('#pagination-controls')).toContainText(`of ${total}`);
   });
 
   test('org filter hides non-matching org summary cards', async ({ page }) => {
@@ -263,7 +269,9 @@ test.describe('Homepage', () => {
     const afterReset = await cards.evaluateAll(
       (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
     );
-    expect(afterReset).toBe(total);
+    expect(afterReset).toBeGreaterThan(0);
+    expect(afterReset).toBeLessThanOrEqual(30);
+    await expect(page.locator('#pagination-controls')).toContainText(`of ${total}`);
   });
 
   test('skip-to-content link is present', async ({ page }) => {
