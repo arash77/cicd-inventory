@@ -1,0 +1,205 @@
+---
+interface Props {
+  orgs?: string[];
+  triggers?: string[];
+  repos?: string[];
+  reposByOrg?: Record<string, string[]>;
+  showOrgFilter?: boolean;
+  placeholder?: string;
+}
+
+const {
+  orgs = [],
+  triggers = [],
+  repos = [],
+  reposByOrg = {},
+  showOrgFilter = false,
+  placeholder = 'Search workflows, repos, orgs, actions…',
+} = Astro.props;
+
+const chevron = `<svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>`;
+const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 cursor-pointer text-slate-700';
+---
+
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center" role="search" aria-label="Filter workflows">
+  <!-- Search input -->
+  <div class="relative flex-1">
+    <label for="search-input" class="sr-only">Search workflows</label>
+    <svg
+      class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+    <input
+      id="search-input"
+      type="search"
+      placeholder={placeholder}
+      aria-label="Search workflows"
+      aria-describedby="search-no-results"
+      class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 placeholder:text-slate-500"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </div>
+
+  {showOrgFilter && orgs.length > 0 && (
+    <div class="relative">
+      <label for="filter-org" class="sr-only">Filter by organization</label>
+      <select id="filter-org" aria-label="Filter by organization" class={selectClass}>
+        <option value="">All orgs</option>
+        {orgs.map((o) => <option value={o}>{o}</option>)}
+      </select>
+      <Fragment set:html={chevron} />
+    </div>
+  )}
+
+  {triggers.length > 0 && (
+    <div class="relative">
+      <label for="filter-trigger" class="sr-only">Filter by trigger</label>
+      <select id="filter-trigger" aria-label="Filter by trigger" class={selectClass}>
+        <option value="">All triggers</option>
+        {triggers.map((t) => <option value={t}>{t}</option>)}
+      </select>
+      <Fragment set:html={chevron} />
+    </div>
+  )}
+
+  {repos.length > 0 && (
+    <div class="relative">
+      <label for="filter-repo" class="sr-only">Filter by repository</label>
+      <select
+        id="filter-repo"
+        aria-label="Filter by repository"
+        data-all-repos={repos.join(',')}
+        class={selectClass}
+      >
+        <option value="">All repos</option>
+        {repos.map((r) => <option value={r}>{r}</option>)}
+      </select>
+      <Fragment set:html={chevron} />
+    </div>
+  )}
+</div>
+
+<div
+  id="search-no-results"
+  class="hidden text-center text-slate-500 py-12 text-sm"
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2 text-slate-300" aria-hidden="true"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
+  No results match your filters.
+</div>
+
+<script define:vars={{ reposByOrg, showOrgFilter }}>
+  const searchInput = document.getElementById('search-input');
+  const orgSelect = document.getElementById('filter-org');
+  const triggerSelect = document.getElementById('filter-trigger');
+  const repoSelect = document.getElementById('filter-repo');
+  const noResults = document.getElementById('search-no-results');
+
+  function applyFilters() {
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const selectedOrg = orgSelect ? orgSelect.value : '';
+    const selectedTrigger = triggerSelect ? triggerSelect.value : '';
+    const selectedRepo = repoSelect ? repoSelect.value : '';
+
+    let visible = 0;
+
+    // Workflow cards (identified by presence of data-triggers attribute)
+    document.querySelectorAll('[data-search-text][data-triggers]').forEach((el) => {
+      const searchText = (el.dataset.searchText ?? '').toLowerCase();
+      const elOrg = el.dataset.org ?? '';
+      const elRepo = el.dataset.repo ?? '';
+      const elTriggers = (el.dataset.triggers ?? '').split(' ').filter(Boolean);
+
+      const matches =
+        (!query || searchText.includes(query)) &&
+        (!selectedOrg || elOrg === selectedOrg) &&
+        (!selectedTrigger || elTriggers.includes(selectedTrigger)) &&
+        (!selectedRepo || elRepo === selectedRepo);
+
+      el.style.display = matches ? '' : 'none';
+      if (matches) visible++;
+    });
+
+    // Org summary cards (no data-triggers) — only filter by search text + org
+    document.querySelectorAll('[data-search-text]:not([data-triggers])').forEach((el) => {
+      const searchText = (el.dataset.searchText ?? '').toLowerCase();
+      const elOrg = el.dataset.org ?? '';
+
+      const matches =
+        (!query || searchText.includes(query)) &&
+        (!selectedOrg || elOrg === selectedOrg);
+
+      el.style.display = matches ? '' : 'none';
+      if (matches) visible++;
+    });
+
+    if (noResults) noResults.classList.toggle('hidden', visible > 0);
+  }
+
+  function updateRepoDropdown() {
+    if (!repoSelect || !showOrgFilter || !orgSelect) return;
+    const selectedOrg = orgSelect.value;
+    const previousRepo = repoSelect.value;
+    const allRepos = (repoSelect.dataset.allRepos ?? '').split(',').filter(Boolean);
+    const nextRepos =
+      selectedOrg && reposByOrg[selectedOrg] ? reposByOrg[selectedOrg] : allRepos;
+
+    repoSelect.innerHTML = '<option value="">All repos</option>';
+    nextRepos.forEach((repo) => {
+      const opt = document.createElement('option');
+      opt.value = repo;
+      opt.textContent = repo;
+      repoSelect.appendChild(opt);
+    });
+
+    if (nextRepos.includes(previousRepo)) {
+      repoSelect.value = previousRepo;
+    }
+  }
+
+  let debounceTimer;
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(applyFilters, 150);
+    });
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && searchInput.value) {
+        searchInput.value = '';
+        clearTimeout(debounceTimer);
+        applyFilters();
+      }
+    });
+  }
+
+  if (orgSelect) {
+    orgSelect.addEventListener('change', () => {
+      updateRepoDropdown();
+      applyFilters();
+    });
+  }
+
+  if (triggerSelect) {
+    triggerSelect.addEventListener('change', applyFilters);
+  }
+
+  if (repoSelect) {
+    repoSelect.addEventListener('change', applyFilters);
+  }
+</script>

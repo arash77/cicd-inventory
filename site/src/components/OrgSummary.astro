@@ -16,6 +16,7 @@ const avatarUrl = `https://github.com/${org}.png?size=80`;
   aria-label={`View ${org} organization – ${repoCount} repos, ${workflowCount} workflows`}
   class="group flex items-center gap-4 bg-white rounded-xl border border-slate-200 p-5 cursor-pointer hover:border-blue-400 hover:shadow-md hover:shadow-blue-100/50 transition-all duration-200"
   data-search-text={searchText?.toLowerCase() ?? org.toLowerCase()}
+  data-org={org}
 >
   <img
     src={avatarUrl}

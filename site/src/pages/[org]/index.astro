@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import WorkflowCard from '../../components/WorkflowCard.astro';
-import SearchFilter from '../../components/SearchFilter.astro';
+import FilterBar from '../../components/FilterBar.astro';
 
 export async function getStaticPaths() {
   const all = await getCollection('workflows');
@@ -24,6 +24,8 @@ const byRepo = workflows.reduce<Record<string, typeof workflows>>((acc, w) => {
 }, {});
 
 const repos = Object.keys(byRepo).sort();
+
+const uniqueTriggers = [...new Set(workflows.flatMap((w) => w.data.on_triggers))].sort();
 
 const cards = workflows.map((w) => ({
   ...w.data,
@@ -92,7 +94,12 @@ const cards = workflows.map((w) => ({
   <!-- All workflows in org with search -->
   <section>
     <h2 class="text-lg font-semibold text-slate-800 mb-4">All Workflows</h2>
-    <SearchFilter placeholder={`Search ${org} workflows…`} />
+    <FilterBar
+      triggers={uniqueTriggers}
+      repos={repos}
+      showOrgFilter={false}
+      placeholder={`Search ${org} workflows…`}
+    />
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {cards.map((w) => (
         <WorkflowCard

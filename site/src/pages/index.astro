@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OrgSummary from '../components/OrgSummary.astro';
-import SearchFilter from '../components/SearchFilter.astro';
+import FilterBar from '../components/FilterBar.astro';
 import WorkflowCard from '../components/WorkflowCard.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -38,6 +38,15 @@ const workflowCards = all.map((w) => ({
   ].join(' '),
 }));
 
+const uniqueTriggers = [...new Set(all.flatMap((w) => w.data.on_triggers))].sort();
+const uniqueRepos = [...new Set(all.map((w) => w.data.repo_name))].sort();
+const reposByOrg = Object.fromEntries(
+  Object.entries(byOrg).map(([o, workflows]) => [
+    o,
+    [...new Set(workflows.map((w) => w.data.repo_name))].sort(),
+  ]),
+);
+
 const stats = [
   { label: 'Workflows', value: all.length, icon: 'workflow' },
   { label: 'Repositories', value: totalRepos, icon: 'repo' },
@@ -65,8 +74,14 @@ const stats = [
     </div>
   </div>
 
-  <!-- Search — filters both org cards and workflow cards -->
-  <SearchFilter />
+  <!-- FilterBar — filters both org cards and workflow cards -->
+  <FilterBar
+    orgs={orgs}
+    triggers={uniqueTriggers}
+    repos={uniqueRepos}
+    reposByOrg={reposByOrg}
+    showOrgFilter={true}
+  />
 
   <!-- Org cards -->
   <section class="mb-10">
