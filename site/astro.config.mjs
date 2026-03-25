@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: process.env.ASTRO_SITE,
   base: process.env.ASTRO_BASE,
+  devToolbar: { enabled: false },
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],
