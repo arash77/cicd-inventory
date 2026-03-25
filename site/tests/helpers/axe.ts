@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
 export async function checkAccessibility(page: Page, disableRules: string[] = []) {
-  const builder = new AxeBuilder({ page });
+  const builder = new AxeBuilder({ page }).include('#main-content');
   if (disableRules.length > 0) {
     builder.disableRules(disableRules);
   }

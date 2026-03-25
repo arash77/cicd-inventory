@@ -27,7 +27,7 @@ test.describe('Repo page', () => {
   });
 
   test('has h1 repo heading with external link and sr-only text', async ({ page }) => {
-    const h1 = page.locator('h1');
+    const h1 = page.locator('#main-content h1');
     await expect(h1).toBeVisible();
     const repoLink = h1.locator('a[target="_blank"]');
     await expect(repoLink).toBeVisible();
