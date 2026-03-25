@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { Font } from 'astro:assets';
+import { getCollection } from 'astro:content';
 
 interface Props {
   title: string;
@@ -10,6 +11,9 @@ interface Props {
 const { title, description = 'CI/CD workflow inventory for Galaxy-ecosystem GitHub organizations.' } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const repoUrl = import.meta.env.REPO_URL ?? 'https://github.com/galaxyproject/cicd-inventory';
+
+const allWorkflows = await getCollection('workflows');
+const navOrgs = [...new Set(allWorkflows.map((w) => w.data.org))].sort();
 ---
 
 <!doctype html>
@@ -34,9 +38,9 @@ const repoUrl = import.meta.env.REPO_URL ?? 'https://github.com/galaxyproject/ci
           CI/CD Inventory
         </a>
         <nav id="main-nav" aria-label="Main navigation" class="hidden sm:flex gap-1 text-sm">
-          <a href={`${base}/BioContainers/`} class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150 cursor-pointer">BioContainers</a>
-          <a href={`${base}/galaxyproject/`} class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150 cursor-pointer">galaxyproject</a>
-          <a href={`${base}/usegalaxy-eu/`} class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150 cursor-pointer">usegalaxy-eu</a>
+          {navOrgs.map((org) => (
+            <a href={`${base}/${org}/`} class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150 cursor-pointer">{org}</a>
+          ))}
         </nav>
         <span class="ml-auto text-xs text-slate-500 hidden sm:inline-flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -57,9 +61,9 @@ const repoUrl = import.meta.env.REPO_URL ?? 'https://github.com/galaxyproject/ci
       </div>
       <!-- Mobile nav panel -->
       <div id="mobile-nav" class="hidden sm:hidden border-t border-slate-100 bg-white/95 px-4 py-3 flex flex-col gap-1">
-        <a href={`${base}/BioContainers/`} class="px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150">BioContainers</a>
-        <a href={`${base}/galaxyproject/`} class="px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150">galaxyproject</a>
-        <a href={`${base}/usegalaxy-eu/`} class="px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150">usegalaxy-eu</a>
+        {navOrgs.map((org) => (
+          <a href={`${base}/${org}/`} class="px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150">{org}</a>
+        ))}
       </div>
     </header>
 
