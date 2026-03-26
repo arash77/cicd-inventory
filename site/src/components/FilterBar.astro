@@ -29,98 +29,134 @@ const chevron = `<svg class="pointer-events-none absolute right-2.5 top-1/2 -tra
 const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 cursor-pointer text-slate-700';
 ---
 
-<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center" role="search" aria-label="Filter workflows">
-  <!-- Search input -->
-  <div class="relative flex-1">
-    <label for="search-input" class="sr-only">Search workflows</label>
-    <svg
-      class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-    <input
-      id="search-input"
-      type="search"
-      placeholder={placeholder}
-      aria-label="Search workflows"
-      aria-describedby="search-no-results"
-      class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 placeholder:text-slate-500"
-      autocomplete="off"
-      spellcheck="false"
-    />
+<div class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden" role="search" aria-label="Filter workflows">
+
+  <!-- Row 1: Search -->
+  <div class="p-4 bg-slate-50/50 border-b border-slate-100">
+    <div class="relative">
+      <label for="search-input" class="sr-only">Search workflows</label>
+      <svg
+        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        id="search-input"
+        type="search"
+        placeholder={placeholder}
+        aria-label="Search workflows"
+        aria-describedby="search-no-results"
+        class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-300 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-150 placeholder:text-slate-500"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
   </div>
 
-  {showOrgFilter && orgs.length > 0 && (
-    <div class="relative">
-      <label for="filter-org" class="sr-only">Filter by organization</label>
-      <select id="filter-org" aria-label="Filter by organization" class={selectClass}>
-        <option value="">All orgs</option>
-        {orgs.map((o) => <option value={o}>{o}</option>)}
-      </select>
-      <Fragment set:html={chevron} />
-    </div>
-  )}
-
-  {triggers.length > 0 && (
-    <div class="relative">
-      <label for="filter-trigger" class="sr-only">Filter by trigger</label>
-      <select id="filter-trigger" aria-label="Filter by trigger" class={selectClass}>
-        <option value="">All triggers</option>
-        {triggers.map((t) => <option value={t}>{t}</option>)}
-      </select>
-      <Fragment set:html={chevron} />
-    </div>
-  )}
-
-  {repos.length > 0 && (
-    <div class="relative">
-      <label for="filter-repo" class="sr-only">Filter by repository</label>
-      <select
-        id="filter-repo"
-        aria-label="Filter by repository"
-        data-all-repos={repos.join(',')}
-        class={selectClass}
+  <!-- Row 2: Filters -->
+  <div class="px-4 py-3 border-b border-slate-100">
+    <div class="flex items-center gap-2 mb-2.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filters</span>
+      <button
+        id="clear-filters"
+        type="button"
+        class="hidden ml-auto text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors duration-150"
+        aria-label="Clear all filters"
       >
-        <option value="">All repos</option>
-        {repos.map((r) => <option value={r}>{r}</option>)}
-      </select>
-      <Fragment set:html={chevron} />
+        Clear all
+      </button>
     </div>
-  )}
+    <div class="flex flex-wrap gap-2">
+      {showOrgFilter && orgs.length > 0 && (
+        <div class="relative">
+          <label for="filter-org" class="sr-only">Filter by organization</label>
+          <select id="filter-org" aria-label="Filter by organization" class={selectClass}>
+            <option value="">All orgs</option>
+            {orgs.map((o) => <option value={o}>{o}</option>)}
+          </select>
+          <Fragment set:html={chevron} />
+        </div>
+      )}
 
-  {statuses.length > 0 && (
-    <div class="relative">
-      <label for="filter-status" class="sr-only">Filter by status</label>
-      <select id="filter-status" aria-label="Filter by status" class={selectClass}>
-        <option value="">All statuses</option>
-        {statuses.map((s) => <option value={s}>{formatStatus(s)}</option>)}
-      </select>
-      <Fragment set:html={chevron} />
-    </div>
-  )}
+      {triggers.length > 0 && (
+        <div class="relative">
+          <label for="filter-trigger" class="sr-only">Filter by trigger</label>
+          <select id="filter-trigger" aria-label="Filter by trigger" class={selectClass}>
+            <option value="">All triggers</option>
+            {triggers.map((t) => <option value={t}>{t}</option>)}
+          </select>
+          <Fragment set:html={chevron} />
+        </div>
+      )}
 
-  {pageSize && (
-    <div class="relative ml-auto">
-      <label for="per-page-select" class="sr-only">Items per page</label>
-      <select id="per-page-select" aria-label="Items per page" class={selectClass}>
-        {[10, 20, 30, 50, 100].map((n) => (
-          <option value={n} selected={n === pageSize}>{n} per page</option>
-        ))}
-      </select>
-      <Fragment set:html={chevron} />
+      {repos.length > 0 && (
+        <div class="relative">
+          <label for="filter-repo" class="sr-only">Filter by repository</label>
+          <select
+            id="filter-repo"
+            aria-label="Filter by repository"
+            data-all-repos={repos.join(',')}
+            class={selectClass}
+          >
+            <option value="">All repos</option>
+            {repos.map((r) => <option value={r}>{r}</option>)}
+          </select>
+          <Fragment set:html={chevron} />
+        </div>
+      )}
+
+      {statuses.length > 0 && (
+        <div class="relative">
+          <label for="filter-status" class="sr-only">Filter by status</label>
+          <select id="filter-status" aria-label="Filter by status" class={selectClass}>
+            <option value="">All statuses</option>
+            {statuses.map((s) => <option value={s}>{formatStatus(s)}</option>)}
+          </select>
+          <Fragment set:html={chevron} />
+        </div>
+      )}
     </div>
-  )}
+  </div>
+
+  <!-- Row 3: Sort & display controls -->
+  <div class="px-4 py-3 flex flex-wrap items-center gap-3">
+    <span id="result-count" class="text-sm text-slate-500" aria-live="polite"></span>
+    <div class="flex items-center gap-2 ml-auto">
+      <div class="relative">
+        <label for="sort-select" class="sr-only">Sort by</label>
+        <select id="sort-select" aria-label="Sort by" class={selectClass}>
+          <option value="name-asc">Sort: Name (A–Z)</option>
+          <option value="name-desc">Sort: Name (Z–A)</option>
+          <option value="status-asc">Sort: Status</option>
+        </select>
+        <Fragment set:html={chevron} />
+      </div>
+      {pageSize && (
+        <div class="relative">
+          <label for="per-page-select" class="sr-only">Items per page</label>
+          <select id="per-page-select" aria-label="Items per page" class={selectClass}>
+            {[10, 20, 30, 50, 100].map((n) => (
+              <option value={n} selected={n === pageSize}>{n} per page</option>
+            ))}
+          </select>
+          <Fragment set:html={chevron} />
+        </div>
+      )}
+    </div>
+  </div>
+
 </div>
 
 <div
@@ -141,6 +177,7 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
   const repoSelect = document.getElementById('filter-repo');
   const statusSelect = document.getElementById('filter-status');
   const perPageSelect = document.getElementById('per-page-select');
+  const sortSelect = document.getElementById('sort-select');
   const noResults = document.getElementById('search-no-results');
 
   let currentPage = 1;
@@ -169,8 +206,6 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
     if (!paginationEl) return;
     if (!currentPageSize || totalPages <= 1) {
       paginationEl.innerHTML = '';
-      const topEl = document.getElementById('pagination-controls-top');
-      if (topEl) topEl.innerHTML = '';
       return;
     }
     const start = (currentPage - 1) * currentPageSize + 1;
@@ -182,7 +217,7 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
 
     const pages = pageRange(currentPage, totalPages);
 
-    function buildNav(suffix, label) {
+    function buildNav() {
       let btns = '';
       for (const p of pages) {
         if (p === null) {
@@ -192,30 +227,27 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
         }
       }
       return `
-        <div class="flex items-center justify-between flex-wrap gap-3 py-4">
+        <div class="flex items-center justify-end flex-wrap gap-3 py-4">
           <p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-700">${start}–${end}</span> of <span class="font-medium text-slate-700">${total}</span> workflows</p>
-          <nav class="flex items-center gap-1" aria-label="${label}" role="navigation">
-            <button id="pg-prev${suffix}" class="${currentPage === 1 ? disabled : inactive}" ${currentPage === 1 ? 'disabled aria-disabled="true"' : ''} aria-label="Previous page">‹ Prev</button>
+          <nav class="flex items-center gap-1" aria-label="Workflow pagination" role="navigation">
+            <button id="pg-prev-bottom" class="${currentPage === 1 ? disabled : inactive}" ${currentPage === 1 ? 'disabled aria-disabled="true"' : ''} aria-label="Previous page">‹ Prev</button>
             ${btns}
-            <button id="pg-next${suffix}" class="${currentPage === totalPages ? disabled : inactive}" ${currentPage === totalPages ? 'disabled aria-disabled="true"' : ''} aria-label="Next page">Next ›</button>
+            <button id="pg-next-bottom" class="${currentPage === totalPages ? disabled : inactive}" ${currentPage === totalPages ? 'disabled aria-disabled="true"' : ''} aria-label="Next page">Next ›</button>
           </nav>
         </div>`;
     }
 
-    paginationEl.innerHTML = buildNav('-bottom', 'Workflow pagination, bottom');
-    const topEl = document.getElementById('pagination-controls-top');
-    if (topEl) topEl.innerHTML = buildNav('-top', 'Workflow pagination, top');
+    paginationEl.innerHTML = buildNav('-bottom', 'Workflow pagination');
 
-    function bindNav(suffix) {
-      document.getElementById(`pg-prev${suffix}`)?.addEventListener('click', () => {
+    function bindNav() {
+      document.getElementById('pg-prev-bottom')?.addEventListener('click', () => {
         if (currentPage > 1) { currentPage--; applyFilters(); scrollToWorkflows(); }
       });
-      document.getElementById(`pg-next${suffix}`)?.addEventListener('click', () => {
+      document.getElementById('pg-next-bottom')?.addEventListener('click', () => {
         if (currentPage < totalPages) { currentPage++; applyFilters(); scrollToWorkflows(); }
       });
     }
-    bindNav('-bottom');
-    bindNav('-top');
+    bindNav();
 
     document.querySelectorAll('.pg-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -257,6 +289,39 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
       matchingWorkflows.push(el);
     });
 
+    if (sortSelect && matchingWorkflows.length > 0) {
+      const [key, dir] = sortSelect.value.split('-');
+      matchingWorkflows.sort((a, b) => {
+        let valA, valB;
+        if (key === 'status') {
+          const statusOrder = { 'success': 1, 'in_progress': 2, 'queued': 3, 'failure': 4, 'cancelled': 5, 'skipped': 6, 'unknown': 7 };
+          const statusA = (a.dataset.status || '').toLowerCase();
+          const statusB = (b.dataset.status || '').toLowerCase();
+          valA = statusOrder[statusA] || 99;
+          valB = statusOrder[statusB] || 99;
+        } else {
+          valA = (a.dataset.name || '').toLowerCase();
+          valB = (b.dataset.name || '').toLowerCase();
+        }
+        
+        if (valA < valB) return dir === 'asc' ? -1 : 1;
+        if (valA > valB) return dir === 'asc' ? 1 : -1;
+        
+        // Fallback to name for stability
+        const nameA = (a.dataset.name || '').toLowerCase();
+        const nameB = (b.dataset.name || '').toLowerCase();
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+      });
+
+      // Reorder in DOM to maintain visual logic
+      const parent = matchingWorkflows[0]?.parentElement;
+      if (parent) {
+        matchingWorkflows.forEach(el => parent.appendChild(el));
+      }
+    }
+
     if (currentPageSize && matchingWorkflows.length > 0) {
       const totalPages = Math.ceil(matchingWorkflows.length / currentPageSize);
       if (currentPage > totalPages) currentPage = totalPages;
@@ -270,21 +335,23 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
       renderPagination(0, 0);
     }
 
-    // --- Org summary cards (no data-triggers) — filter by search + org only ---
-    let visibleOrgs = 0;
-    document.querySelectorAll('[data-search-text]:not([data-triggers])').forEach((el) => {
-      const searchText = (el.dataset.searchText ?? '').toLowerCase();
-      const elOrg = el.dataset.org ?? '';
+    if (noResults) noResults.classList.toggle('hidden', matchingWorkflows.length > 0);
 
-      const matches =
-        (!query || searchText.includes(query)) &&
-        (!selectedOrg || elOrg === selectedOrg);
+    const resultCountEl = document.getElementById('result-count');
+    if (resultCountEl) {
+      const total = document.querySelectorAll('[data-search-text][data-triggers]').length;
+      resultCountEl.textContent = matchingWorkflows.length === total
+        ? `${total} workflow${total !== 1 ? 's' : ''}`
+        : `${matchingWorkflows.length} of ${total} workflows`;
+    }
 
-      el.style.display = matches ? '' : 'none';
-      if (matches) visibleOrgs++;
-    });
-
-    if (noResults) noResults.classList.toggle('hidden', matchingWorkflows.length > 0 || visibleOrgs > 0);
+    const clearBtn = document.getElementById('clear-filters');
+    if (clearBtn) {
+      const anyActive = [orgSelect, triggerSelect, repoSelect, statusSelect]
+        .some(sel => sel && sel.value !== '');
+      const searchActive = searchInput ? searchInput.value.trim() !== '' : false;
+      clearBtn.classList.toggle('hidden', !anyActive && !searchActive);
+    }
   }
 
   function updateRepoDropdown() {
@@ -337,11 +404,25 @@ const selectClass = 'appearance-none w-full sm:w-auto py-2.5 pl-3 pr-8 rounded-l
   if (triggerSelect) triggerSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
   if (repoSelect) repoSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
   if (statusSelect) statusSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+  if (sortSelect) sortSelect.addEventListener('change', () => { currentPage = 1; applyFilters(); });
   if (perPageSelect) perPageSelect.addEventListener('change', () => {
     currentPageSize = parseInt(perPageSelect.value);
     currentPage = 1;
     applyFilters();
   });
+
+  const clearFiltersBtn = document.getElementById('clear-filters');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', () => {
+      [orgSelect, triggerSelect, repoSelect, statusSelect].forEach(sel => {
+        if (sel) sel.value = '';
+      });
+      if (searchInput) searchInput.value = '';
+      currentPage = 1;
+      if (showOrgFilter) updateRepoDropdown();
+      applyFilters();
+    });
+  }
 
   // Run once the full DOM is ready so all workflow cards exist.
   if (document.readyState === 'loading') {

@@ -19,11 +19,6 @@ test.describe('Homepage', () => {
     await expect(statCards).toHaveCount(3);
   });
 
-  test('renders org summary cards', async ({ page }) => {
-    const orgCards = page.locator('[aria-label^="View "]');
-    await expect(orgCards.first()).toBeVisible();
-  });
-
   test('renders workflow cards', async ({ page }) => {
     const workflowCards = page.locator('article[aria-label^="Workflow:"]');
     const count = await workflowCards.count();
@@ -61,6 +56,32 @@ test.describe('Homepage', () => {
     await expect(page.locator('#filter-trigger')).toBeVisible();
     await expect(page.locator('#filter-repo')).toBeVisible();
     await expect(page.locator('#filter-status')).toBeVisible();
+  });
+
+  test('sort dropdown is present and accessible', async ({ page }) => {
+    const sort = page.locator('#sort-select');
+    await expect(sort).toBeVisible();
+    await expect(sort).toHaveAttribute('aria-label', 'Sort by');
+    // Should have at least Name A-Z and Status options
+    await expect(page.locator('#sort-select option[value="name-asc"]')).toBeAttached();
+    await expect(page.locator('#sort-select option[value="name-desc"]')).toBeAttached();
+    await expect(page.locator('#sort-select option[value="status-asc"]')).toBeAttached();
+  });
+
+  test('sort by name descending reorders workflow cards', async ({ page }) => {
+    const sort = page.locator('#sort-select');
+    await sort.selectOption('name-asc');
+    const cards = page.locator('[data-name]');
+    const first = await cards.first().getAttribute('data-name');
+    const last = await cards.last().getAttribute('data-name');
+    await sort.selectOption('name-desc');
+    const firstDesc = await cards.first().getAttribute('data-name');
+    // After desc sort, first card should differ from asc sort first card (unless all same)
+    await expect(sort).toHaveValue('name-desc');
+    // Verify the first name in desc is >= last name in asc (they were previously sorted asc)
+    if (first && last && firstDesc) {
+      expect(firstDesc.toLowerCase() >= last.toLowerCase()).toBe(true);
+    }
   });
 
   test('status filter dropdown has at least one real option', async ({ page }) => {
@@ -200,24 +221,6 @@ test.describe('Homepage', () => {
     expect(visibleCount).toBeGreaterThan(0);
     expect(visibleCount).toBeLessThanOrEqual(30);
     await expect(page.locator('#pagination-controls')).toContainText(`of ${total}`);
-  });
-
-  test('org filter hides non-matching org summary cards', async ({ page }) => {
-    const orgCards = page.locator('[aria-label^="View "]');
-    const total = await orgCards.count();
-    if (total === 0) test.skip();
-
-    // Select a specific org — only that org's card should remain
-    const firstOrg = await page.locator('#filter-org option:not([value=""])').first().getAttribute('value');
-    if (!firstOrg) test.skip();
-
-    await page.locator('#filter-org').selectOption(firstOrg!);
-    await page.waitForTimeout(200);
-
-    const visibleOrgCards = await orgCards.evaluateAll(
-      (els) => els.filter((e) => (e as HTMLElement).style.display !== 'none').length,
-    );
-    expect(visibleOrgCards).toBeLessThanOrEqual(total);
   });
 
   test('repo dropdown updates when org is selected', async ({ page }) => {

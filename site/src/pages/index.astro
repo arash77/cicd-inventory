@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import OrgSummary from '../components/OrgSummary.astro';
 import FilterBar from '../components/FilterBar.astro';
 import WorkflowCard from '../components/WorkflowCard.astro';
 
@@ -75,7 +74,7 @@ const stats = [
     </div>
   </div>
 
-  <!-- FilterBar — filters both org cards and workflow cards -->
+  <!-- FilterBar -->
   <FilterBar
     orgs={orgs}
     triggers={uniqueTriggers}
@@ -86,40 +85,12 @@ const stats = [
     pageSize={30}
   />
 
-  <!-- Org cards -->
-  <section class="mb-10">
-    <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-      Organizations
-    </h2>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {orgs.map((org) => {
-        const workflows = byOrg[org];
-        const repos = new Set(workflows.map((w) => w.data.repo_name)).size;
-        const orgSearchText = [
-          org,
-          ...new Set(workflows.map((w) => w.data.repo_name)),
-        ].join(' ');
-        return (
-          <OrgSummary
-            org={org}
-            repoCount={repos}
-            workflowCount={workflows.length}
-            href={`${base}/${org}/`}
-            searchText={orgSearchText}
-          />
-        );
-      })}
-    </div>
-  </section>
-
   <!-- All workflows -->
   <section id="all-workflows">
     <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
       All Workflows
     </h2>
-    <div id="pagination-controls-top"></div>
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {workflowCards.map((w) => (
         <WorkflowCard
@@ -130,7 +101,6 @@ const stats = [
           workflowName={w.workflow_name}
           onTriggers={w.on_triggers}
           jobs={w.jobs}
-          statusBadgeUrl={w.status_badge_url}
           lastRunStatus={w.last_run_status}
           detailHref={w.detailHref}
           searchText={w.searchText}
