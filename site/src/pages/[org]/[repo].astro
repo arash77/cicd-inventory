@@ -42,19 +42,19 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
 
   <!-- Repo header -->
   <div class="mb-8">
-    <h1 class="text-2xl font-bold text-slate-900 mb-1 tracking-tight">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">
       <a
         href={repoUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="hover:text-blue-600 cursor-pointer transition-colors duration-150 inline-flex items-center gap-2"
+        class="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-150 inline-flex items-center gap-2"
       >
         {org}/{repo}
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 dark:text-slate-500" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
         <span class="sr-only">(opens in new tab)</span>
       </a>
     </h1>
-    <p class="text-slate-500 text-sm">
+    <p class="text-slate-500 dark:text-slate-400 text-sm">
       {workflows.length} workflow{workflows.length !== 1 ? 's' : ''}
     </p>
   </div>
@@ -65,16 +65,16 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
       const workflowGithubUrl = `${repoUrl}/actions/workflows/${w.data.workflow_file}`;
       const yamlId = `yaml-${w.data.workflow_file.replace(/[^a-zA-Z0-9]/g, '-')}`;
       return (
-        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm" aria-label={`Workflow: ${w.data.workflow_name}`}>
+        <section class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm" aria-label={`Workflow: ${w.data.workflow_name}`}>
           <!-- Workflow header -->
-          <div class="flex items-start justify-between gap-4 p-6 border-b border-slate-100 bg-slate-50/50">
+          <div class="flex items-start justify-between gap-4 p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">{w.data.workflow_name}</h2>
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{w.data.workflow_name}</h2>
               <a
                 href={`${repoUrl}/blob/HEAD/${w.data.workflow_path}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-xs text-blue-600 hover:underline cursor-pointer transition-colors duration-150 font-mono"
+                class="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer transition-colors duration-150 font-mono"
               >
                 {w.data.workflow_path}
                 <span class="sr-only">(opens in new tab)</span>
@@ -93,12 +93,12 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
             <!-- Triggers -->
             {w.data.on_triggers.length > 0 && (
               <div>
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Triggers</h3>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">Triggers</h3>
                 <div class="flex flex-wrap gap-2" role="list" aria-label="Triggers">
                   {w.data.on_triggers.map((t) => (
                     <span
                       role="listitem"
-                      class={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${triggerColors[t] ?? 'bg-slate-50 text-slate-600 border border-slate-200'}`}
+                      class={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${triggerColors[t] ?? 'bg-slate-50 text-slate-600 border border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600'}`}
                     >
                       {t}
                     </span>
@@ -110,16 +110,16 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
             <!-- Jobs table -->
             {w.data.jobs.length > 0 && (
               <div>
-                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Jobs</h3>
-                <div class="overflow-x-auto rounded-lg border border-slate-200" tabindex="0" role="region" aria-label={`Jobs table for ${w.data.workflow_name}`}>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">Jobs</h3>
+                <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700" tabindex="0" role="region" aria-label={`Jobs table for ${w.data.workflow_name}`}>
                   <table class="data-table min-w-full text-sm">
                     <caption class="sr-only">Jobs for {w.data.workflow_name}</caption>
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
                       <tr>
-                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600">Job</th>
-                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600">Runs on</th>
-                        <th scope="col" class="text-right px-3 py-2.5 font-medium text-slate-600">Steps</th>
-                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600">Actions used</th>
+                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Job</th>
+                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Runs on</th>
+                        <th scope="col" class="text-right px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Steps</th>
+                        <th scope="col" class="text-left px-3 py-2.5 font-medium text-slate-600 dark:text-slate-300">Actions used</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -128,16 +128,16 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
                           ? job.runs_on.join(', ')
                           : job.runs_on;
                         return (
-                          <tr class={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
-                            <td class="px-3 py-2.5 font-medium text-slate-800">
+                          <tr class={i % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/50'}>
+                            <td class="px-3 py-2.5 font-medium text-slate-800 dark:text-slate-200">
                               {job.name ?? job.job_id}
                             </td>
-                            <td class="px-3 py-2.5 text-xs text-slate-600 font-mono">{runsOn}</td>
-                            <td class="px-3 py-2.5 text-right text-slate-500 tabular-nums">{job.steps_count}</td>
+                            <td class="px-3 py-2.5 text-xs text-slate-600 dark:text-slate-400 font-mono">{runsOn}</td>
+                            <td class="px-3 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums">{job.steps_count}</td>
                             <td class="px-3 py-2.5">
                               <div class="flex flex-wrap gap-1">
                                 {job.actions_used.map((a) => (
-                                  <span class="inline-block bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-1.5 py-0.5 text-xs font-mono">
+                                  <span class="inline-block bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700 rounded-md px-1.5 py-0.5 text-xs font-mono">
                                     {a.uses}
                                   </span>
                                 ))}
@@ -157,7 +157,7 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
               <details>
                 <summary
                   aria-label={`Raw YAML for ${w.data.workflow_name}`}
-                  class="text-xs font-semibold uppercase tracking-wide text-slate-500 cursor-pointer select-none hover:text-slate-800 transition-colors duration-150 mb-2"
+                  class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition-colors duration-150 mb-2"
                 >
                   Raw YAML
                 </summary>
@@ -176,7 +176,7 @@ const repoUrl = workflows[0]?.data.repo_url ?? `https://github.com/${org}/${repo
             </div>
 
             <!-- Meta -->
-            <p class="text-xs text-slate-500">
+            <p class="text-xs text-slate-500 dark:text-slate-400">
               Last fetched: <time>{w.data.last_fetched.toLocaleDateString('en-US', { dateStyle: 'medium' })}</time>
             </p>
           </div>

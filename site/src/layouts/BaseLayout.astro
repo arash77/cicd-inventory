@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { Font } from 'astro:assets';
 import { getCollection } from 'astro:content';
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 interface Props {
   title: string;
@@ -26,30 +27,41 @@ const navOrgs = [...new Set(allWorkflows.map((w) => w.data.org))].sort();
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
     <Font cssVariable="--font-inter" />
     <Font cssVariable="--font-jetbrains-mono" />
+    <!-- Inline theme script: runs before CSS paints to prevent FOUC -->
+    <script is:inline>
+      (function () {
+        var theme = localStorage.getItem('theme') || 'auto';
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (theme === 'auto' && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
-  <body class="min-h-full bg-slate-50 text-slate-900 flex flex-col">
+  <body class="min-h-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-150">
     <a href="#main-content" class="skip-to-content">Skip to content</a>
 
     <!-- Nav -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
+    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-6">
-        <a href={`${base}/`} class="flex items-center gap-2 font-bold text-blue-600 text-lg tracking-tight hover:text-blue-700 transition-colors duration-150">
+        <a href={`${base}/`} class="flex items-center gap-2 font-bold text-blue-600 dark:text-blue-400 text-lg tracking-tight hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
           CI/CD Inventory
         </a>
         <nav id="main-nav" aria-label="Main navigation" class="hidden sm:flex gap-1 text-sm">
           {navOrgs.map((org) => (
-            <a href={`${base}/${org}/`} class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150 cursor-pointer">{org}</a>
+            <a href={`${base}/${org}/`} class="px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-150 cursor-pointer">{org}</a>
           ))}
         </nav>
-        <span class="ml-auto text-xs text-slate-500 hidden sm:inline-flex items-center gap-1.5">
+        <span class="ml-auto text-xs text-slate-500 dark:text-slate-500 hidden sm:inline-flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
           Auto-updated daily
         </span>
+        <ThemeToggle />
         <!-- Mobile hamburger -->
         <button
           id="mobile-menu-btn"
-          class="sm:hidden ml-auto p-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150"
+          class="sm:hidden p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-150"
           aria-expanded="false"
           aria-controls="mobile-nav"
           aria-label="Open navigation menu"
@@ -60,9 +72,9 @@ const navOrgs = [...new Set(allWorkflows.map((w) => w.data.org))].sort();
         </button>
       </div>
       <!-- Mobile nav panel -->
-      <div id="mobile-nav" class="hidden sm:hidden border-t border-slate-100 bg-white/95 px-4 py-3 flex flex-col gap-1">
+      <div id="mobile-nav" class="hidden sm:hidden border-t border-slate-100 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 px-4 py-3 flex flex-col gap-1">
         {navOrgs.map((org) => (
-          <a href={`${base}/${org}/`} class="px-3 py-2 rounded-lg text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150">{org}</a>
+          <a href={`${base}/${org}/`} class="px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-150">{org}</a>
         ))}
       </div>
     </header>
@@ -73,12 +85,12 @@ const navOrgs = [...new Set(allWorkflows.map((w) => w.data.org))].sort();
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-200 bg-white mt-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+    <footer class="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 mt-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
         <span class="font-medium">Galaxy CI/CD Inventory</span>
         <a
           href={repoUrl}
-          class="inline-flex items-center gap-1.5 text-slate-500 hover:text-blue-600 transition-colors duration-150 cursor-pointer"
+          class="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-150 cursor-pointer"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -54,11 +54,11 @@ const cards = workflows.map((w) => ({
       alt={`${org} avatar`}
       width="56"
       height="56"
-      class="rounded-full border-2 border-slate-200 shadow-sm"
+      class="rounded-full border-2 border-slate-200 dark:border-slate-600 shadow-sm"
     />
     <div>
-      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{org}</h1>
-      <p class="text-slate-500 text-sm">
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{org}</h1>
+      <p class="text-slate-500 dark:text-slate-400 text-sm">
         {repos.length} repo{repos.length !== 1 ? 's' : ''} &middot; {workflows.length} workflow{workflows.length !== 1 ? 's' : ''}
       </p>
     </div>
@@ -66,25 +66,25 @@ const cards = workflows.map((w) => ({
 
   <!-- Repo overview table -->
   <section class="mb-10">
-    <h2 class="text-lg font-semibold text-slate-800 mb-4">Repositories</h2>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm" tabindex="0" role="region" aria-label="Repositories table">
+    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Repositories</h2>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm" tabindex="0" role="region" aria-label="Repositories table">
       <table class="data-table min-w-full text-sm">
         <caption class="sr-only">Repositories in {org} with workflow counts</caption>
-        <thead class="bg-slate-50 border-b border-slate-200">
+        <thead class="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
           <tr>
-            <th scope="col" class="text-left px-4 py-3 font-medium text-slate-600">Repository</th>
-            <th scope="col" class="text-right px-4 py-3 font-medium text-slate-600">Workflows</th>
+            <th scope="col" class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Repository</th>
+            <th scope="col" class="text-right px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Workflows</th>
           </tr>
         </thead>
         <tbody>
           {repos.map((repo, i) => (
-            <tr class={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+            <tr class={i % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/50'}>
               <td class="px-4 py-3">
-                <a href={`${base}/${org}/${repo}/`} class="text-blue-600 hover:text-blue-700 hover:underline font-medium cursor-pointer transition-colors duration-150">
+                <a href={`${base}/${org}/${repo}/`} class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline font-medium cursor-pointer transition-colors duration-150">
                   {repo}
                 </a>
               </td>
-              <td class="px-4 py-3 text-right text-slate-500 tabular-nums">{byRepo[repo].length}</td>
+              <td class="px-4 py-3 text-right text-slate-500 dark:text-slate-400 tabular-nums">{byRepo[repo].length}</td>
             </tr>
           ))}
         </tbody>
@@ -94,7 +94,7 @@ const cards = workflows.map((w) => ({
 
   <!-- All workflows in org with search -->
   <section>
-    <h2 class="text-lg font-semibold text-slate-800 mb-4">All Workflows</h2>
+    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">All Workflows</h2>
     <FilterBar
       triggers={uniqueTriggers}
       repos={repos}
