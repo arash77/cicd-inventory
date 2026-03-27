@@ -91,14 +91,34 @@ jobs:
         working-directory: site
         run: pnpm run build
 
+      - name: Get Playwright version
+        id: playwright-version
+        working-directory: site
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: site
         # Both projects (desktop-chrome, mobile-chrome) use Chromium — no need for Firefox/WebKit.
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: site
+        run: pnpm exec playwright install-deps chromium
+
       - name: Run Playwright tests
         working-directory: site
         run: pnpm run test
+        env:
+          SKIP_BUILD: "true"
 
       - name: Upload Playwright report
         if: failure()
