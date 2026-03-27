@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import pytest
+
 from cicd_inventory.providers.github import GitHubProvider
 
 # ---------------------------------------------------------------------------
@@ -50,7 +51,8 @@ CASES: list[tuple[str, list[str]]] = [
     ),
     # 4 – quoted key (already worked before the fix; must keep working)
     (
-        '"on":\n  push:\n  schedule:\n    - cron: "0 0 * * *"\nname: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n',
+        '"on":\n  push:\n  schedule:\n    - cron: "0 0 * * *"\n'
+        "name: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
         ["push", "schedule"],
     ),
     # 5 – workflow_dispatch only
@@ -60,17 +62,21 @@ CASES: list[tuple[str, list[str]]] = [
     ),
     # 6 – push with branch filter (sub-keys must be ignored; only event name returned)
     (
-        "on:\n  push:\n    branches: [main, develop]\n  pull_request:\n    types: [opened, synchronize]\nname: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
+        "on:\n  push:\n    branches: [main, develop]\n"
+        "  pull_request:\n    types: [opened, synchronize]\n"
+        "name: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
         ["push", "pull_request"],
     ),
     # 7 – release trigger
     (
-        "on:\n  release:\n    types: [published]\nname: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
+        "on:\n  release:\n    types: [published]\n"
+        "name: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
         ["release"],
     ),
     # 8 – schedule + workflow_dispatch (common combination)
     (
-        "on:\n  schedule:\n    - cron: '0 6 * * 1'\n  workflow_dispatch:\nname: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
+        "on:\n  schedule:\n    - cron: '0 6 * * 1'\n  workflow_dispatch:\n"
+        "name: Test\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n",
         ["schedule", "workflow_dispatch"],
     ),
 ]

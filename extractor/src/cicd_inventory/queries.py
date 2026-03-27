@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 # ---------------------------------------------------------------------------
 # Repo discovery — paginated list of non-fork repositories in an org
 # ---------------------------------------------------------------------------

@@ -22,6 +22,8 @@ packages = ["src/cicd_inventory"]
 [tool.ruff]
 target-version = "py314"
 line-length = 120
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
 [tool.ruff.lint.isort]

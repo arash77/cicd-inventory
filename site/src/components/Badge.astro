@@ -18,8 +18,8 @@ const { src, alt = 'Build status', workflowUrl } = Astro.props;
     dir="ltr"
     class="inline-flex items-center cursor-pointer rounded transition-opacity duration-150 hover:opacity-80"
   >
-    <img src={src} alt={alt} loading="lazy" height="20" class="h-5 w-auto block" />
+    <img src={src} alt={alt} loading="lazy" width="220" height="20" class="h-5 w-auto block" />
   </a>
 ) : (
-  <img src={src} alt={alt} loading="lazy" height="20" class="h-5 w-auto block" />
+  <img src={src} alt={alt} loading="lazy" width="220" height="20" class="h-5 w-auto block" />
 )}
