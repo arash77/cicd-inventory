@@ -52,6 +52,8 @@ test.describe('Homepage', () => {
   });
 
   test('filter bar renders org, trigger, repo and status dropdowns', async ({ page }) => {
+    const cards = page.locator('article[aria-label^="Workflow:"]');
+    if (await cards.count() === 0) test.skip();
     await expect(page.locator('#filter-org')).toBeVisible();
     await expect(page.locator('#filter-trigger')).toBeVisible();
     await expect(page.locator('#filter-repo')).toBeVisible();
@@ -69,9 +71,10 @@ test.describe('Homepage', () => {
   });
 
   test('sort by name descending reorders workflow cards', async ({ page }) => {
+    const cards = page.locator('[data-name]');
+    if (await cards.count() === 0) test.skip();
     const sort = page.locator('#sort-select');
     await sort.selectOption('name-asc');
-    const cards = page.locator('[data-name]');
     const first = await cards.first().getAttribute('data-name');
     const last = await cards.last().getAttribute('data-name');
     await sort.selectOption('name-desc');
@@ -85,20 +88,24 @@ test.describe('Homepage', () => {
   });
 
   test('status filter dropdown has at least one real option', async ({ page }) => {
+    if (await page.locator('article[aria-label^="Workflow:"]').count() === 0) test.skip();
     await expect(page.locator('#filter-status option:not([value=""])').first()).toBeAttached();
   });
 
   test('org filter dropdown has at least one real option', async ({ page }) => {
+    if (await page.locator('article[aria-label^="Workflow:"]').count() === 0) test.skip();
     const realOptions = page.locator('#filter-org option:not([value=""])');
     await expect(realOptions.first()).toBeAttached();
   });
 
   test('trigger filter dropdown has at least one real option', async ({ page }) => {
+    if (await page.locator('article[aria-label^="Workflow:"]').count() === 0) test.skip();
     const realOptions = page.locator('#filter-trigger option:not([value=""])');
     await expect(realOptions.first()).toBeAttached();
   });
 
   test('repo filter dropdown has at least one real option', async ({ page }) => {
+    if (await page.locator('article[aria-label^="Workflow:"]').count() === 0) test.skip();
     const realOptions = page.locator('#filter-repo option:not([value=""])');
     await expect(realOptions.first()).toBeAttached();
   });

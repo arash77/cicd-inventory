@@ -4,8 +4,8 @@ import { checkAccessibility } from './helpers/axe';
 test.describe('Repo page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Navigate to the first workflow card's detail page
-    const workflowCard = page.locator('article[aria-label^="Workflow:"] a').first();
+    // Navigate to the first workflow card's detail page (internal link, not external GitHub links)
+    const workflowCard = page.locator('article[aria-label^="Workflow:"] a:not([target="_blank"])').first();
     const count = await workflowCard.count();
     if (count === 0) {
       test.skip();
