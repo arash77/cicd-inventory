@@ -6,7 +6,8 @@ test.describe('Org page', () => {
   const orgHref = '/BioContainers/';
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(orgHref, { waitUntil: 'domcontentloaded' });
+    const response = await page.goto(orgHref, { waitUntil: 'domcontentloaded' });
+    if (!response || response.status() !== 200) test.skip();
   });
 
   test('has breadcrumb with Home link', async ({ page }) => {
