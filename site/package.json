@@ -13,7 +13,7 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.2",
     "@tailwindcss/vite": "^4.2.2",
-    "astro": "^6.1.1",
+    "astro": "^6.1.8",
     "tailwindcss": "^4.2.2"
   },
   "pnpm": {
@@ -23,7 +23,7 @@
     ]
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
-    "@playwright/test": "^1.58.2"
+    "@axe-core/playwright": "^4.11.2",
+    "@playwright/test": "^1.59.1"
   }
 }
